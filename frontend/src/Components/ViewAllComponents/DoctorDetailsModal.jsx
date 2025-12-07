@@ -35,55 +35,62 @@ const ModalSelect = styled.select`
 const DoctorDetailsModal = ({ visible, onClose, onSubmit }) => {
   const [doctorName, setDoctorName] = useState("");
   const [doctorEmail, setDoctorEmail] = useState("");
-  const [doctorId, setDoctorId] = useState("");
-  const [registeredDoctors, setRegisteredDoctors] = useState([]);
   const [verifiedEmails, setVerifiedEmails] = useState([]);
   const userId = localStorage.getItem("userId"); // Fetch user ID
 
-  // Fetch registered doctors and verified emails
+  // Fetch verified doctor emails when modal opens
   useEffect(() => {
     if (!userId || !visible) return;
 
-    const fetchDoctorsAndEmails = async () => {
+    const fetchEmails = async () => {
       try {
-        // Fetch registered doctors
-        const doctorsResponse = await axios.get(
-          `${config.API_BASE_URL}/doctors/list`
-        );
-        setRegisteredDoctors(doctorsResponse.data.doctors || []);
-
-        // Fetch verified doctor emails (legacy system)
-        const emailsResponse = await axios.get(
+        const response = await axios.get(
           `${config.API_BASE_URL}/fetch-emails/${userId}`
         );
-        const verifiedList = emailsResponse.data.emails.filter(
+
+        // Filter to only include verified emails
+        const verifiedList = response.data.emails.filter(
           (emailObj) => emailObj.status === "verified"
         );
+
         setVerifiedEmails(verifiedList);
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setRegisteredDoctors([]);
+        console.error("Error fetching emails:", error);
         setVerifiedEmails([]);
       }
     };
 
-    fetchDoctorsAndEmails();
+    fetchEmails();
   }, [userId, visible]);
 
   const handleSubmit = async () => {
-    if (!doctorEmail) {
-      showErrorToast("Please select a doctor.");
+    if (!doctorName || !doctorEmail) {
+      showErrorToast("Please fill in all fields.");
       return;
     }
 
-    // Use doctorId if available (registered doctor), otherwise use email (legacy)
-    onSubmit(doctorName, doctorEmail, doctorId);
+    try {
+      // Check if an active session exists with the same doctor email
+      // const response = await axios.get(
+      //   `${config.API_BASE_URL}/check-active-session/${userId}/${doctorEmail}`
+      // );
+  
+      // if (response.data.error) {
+      //   showErrorToast(response.data.error);
+      //   return;
+      // }
+
+    onSubmit(doctorName, doctorEmail);
 
     // Clear input fields after submission
     setDoctorName("");
     setDoctorEmail("");
-    setDoctorId("");
-  };
+  }
+  catch (error) {
+    console.error("Error checking active session:", error);
+    showErrorToast("Failed to check session. Please try again.");
+  }
+};
 
   if (!visible) return null;
 

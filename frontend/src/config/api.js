@@ -1,9 +1,9 @@
 // Configuration des URLs de l'API
 const config = {
-  // URL publique du backend via Vercel
+  // URL publique du backend (changez après déploiement sur Render)
   API_BASE_URL: window.location.hostname === 'localhost' 
     ? 'http://localhost:3002' 
-    : 'https://medibase.vercel.app',
+    : 'https://medibase-backend.onrender.com',
     
   // Autres configurations
   APP_NAME: 'Medibase',

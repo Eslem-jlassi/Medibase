@@ -5,7 +5,7 @@ import DisplayFiles from "./ViewAllComponents/DisplayFiles";
 import Navbar from "./HomeComponents/navbar";
 import HomeButton from "./HomeBtn";
 import SelectSendButtons from "./ViewAllComponents/SelectSendButtons";
-import DoctorDetailsModal from "./ViewAllComponents/DoctorDetailsModalNew";
+import DoctorDetailsModal from "./ViewAllComponents/DoctorDetailsModal";
 import { showErrorToast, showSuccessToast } from "./toastConfig";
 import axios from "axios";
 import config from "../config/api";
@@ -131,6 +131,7 @@ const ViewAllFiles = () => {
           setSelectedFiles([]); // Deselect files on cancel
           setSelectedIds([]);
         }}
+        onSubmit={handleModalSubmit}
         selectedFiles={selectedIds} // Pass selected files
       />
     </PageContainer>

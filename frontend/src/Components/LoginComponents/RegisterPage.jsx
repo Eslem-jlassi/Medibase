@@ -230,41 +230,6 @@ const StyledSignInLink = styled.p`
     }
   }
 `;
-
-const RoleToggle = styled.div`
-  display: flex;
-  gap: 10px;
-  margin-bottom: 25px;
-  background: rgba(102, 126, 234, 0.08);
-  padding: 6px;
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-`;
-
-const RoleButton = styled.button`
-  flex: 1;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: ${props => props.active 
-    ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-    : 'transparent'};
-  color: ${props => props.active ? '#fff' : '#667eea'};
-  box-shadow: ${props => props.active 
-    ? '0 4px 15px rgba(102, 126, 234, 0.4)' 
-    : 'none'};
-  
-  &:hover {
-    transform: ${props => props.active ? 'translateY(-2px)' : 'none'};
-    background: ${props => props.active 
-      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' 
-      : 'rgba(102, 126, 234, 0.15)'};
-  }
-`;
 function RegisterPage() {
   const [formData, setFormData] = useState({
     username: "",
@@ -272,14 +237,11 @@ function RegisterPage() {
     confirmEmail: "",
     password: "",
     confirmPassword: "",
-    specialization: "",
-    licenseNumber: "",
   });
 
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [userRole, setUserRole] = useState("patient");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -310,57 +272,18 @@ function RegisterPage() {
     }
   
     try {
-      const registerData = {
+      const response = await axios.post(`${config.API_BASE_URL}/register`, {
         username,
         password,
         email,
-        role: userRole,
-      };
-      
-      // Add doctor-specific fields
-      if (userRole === 'doctor') {
-        registerData.specialization = formData.specialization;
-        registerData.licenseNumber = formData.licenseNumber;
-      }
-      
-      const response = await axios.post(`${config.API_BASE_URL}/register`, registerData);
+      });
   
       if (response.status === 201) {
-        const successMsg = userRole === 'doctor' 
-          ? "Compte médecin créé ! Connexion en cours..."
-          : "Compte créé avec succès !";
-        showSuccessToast(successMsg);
+        showSuccessToast("User created successfully!");
         setError(""); // clear errors
-        
-        // Auto-login after registration
-        const loginResponse = await axios.post(`${config.API_BASE_URL}/login`, {
-          username,
-          password,
-        });
-        
-        if (loginResponse.status === 200) {
-          const userId = loginResponse.data.userId;
-          const sessionID = loginResponse.data.sessionID;
-          const token = loginResponse.data.token;
-          const userName = loginResponse.data.name || username;
-          const userEmail = loginResponse.data.email || email;
-          
-          localStorage.setItem("userId", userId);
-          localStorage.setItem("username", username);
-          localStorage.setItem("sessionID", sessionID);
-          localStorage.setItem("token", token);
-          localStorage.setItem("userRole", userRole);
-          localStorage.setItem("userName", userName);
-          localStorage.setItem("userEmail", userEmail);
-          
-          setTimeout(() => {
-            if (userRole === 'doctor') {
-              navigate("/doctor-dashboard");
-            } else {
-              navigate("/home");
-            }
+        setTimeout(() => {
+            navigate("/");
           }, 2000);
-        }
       }
     } catch (error) {
       const errorMessage = error.response?.data?.error || "Something went wrong.";
@@ -374,25 +297,6 @@ function RegisterPage() {
       <ToastContainer />
       <RegisterBox>
         <Title>Create an Account</Title>
-        
-        {/* Role Toggle */}
-        <RoleToggle>
-          <RoleButton 
-            active={userRole === 'patient'} 
-            onClick={() => setUserRole('patient')}
-            type="button"
-          >
-            👤 Patient
-          </RoleButton>
-          <RoleButton 
-            active={userRole === 'doctor'} 
-            onClick={() => setUserRole('doctor')}
-            type="button"
-          >
-            🩺 Médecin
-          </RoleButton>
-        </RoleToggle>
-        
       <Form onSubmit={handleSubmit}>
         <InputWrapper>
           <Input
@@ -426,32 +330,6 @@ function RegisterPage() {
             required
           />
         </InputWrapper>
-
-        {userRole === 'doctor' && (
-          <>
-            <InputWrapper>
-              <Input
-                type="text"
-                name="specialization"
-                placeholder="Spécialisation (ex: Cardiologue, Généraliste)"
-                value={formData.specialization}
-                onChange={handleChange}
-                required
-              />
-            </InputWrapper>
-
-            <InputWrapper>
-              <Input
-                type="text"
-                name="licenseNumber"
-                placeholder="Numéro de licence médicale"
-                value={formData.licenseNumber}
-                onChange={handleChange}
-                required
-              />
-            </InputWrapper>
-          </>
-        )}
 
         <InputWrapper>
           <Input
