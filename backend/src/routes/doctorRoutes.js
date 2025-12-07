@@ -8,6 +8,103 @@ function getDb(req) {
 }
 
 /**
+ * Get all registered doctors (for patient file sharing)
+ * @route GET /doctors/list
+ */
+router.get("/doctors/list", async (req, res) => {
+  try {
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
+
+    const doctors = await db.collection("userData")
+      .find({ role: "doctor" })
+      .project({ _id: 1, username: 1, name: 1, email: 1, specialization: 1 })
+      .toArray();
+
+    res.json({ doctors });
+  } catch (error) {
+    console.error("Error fetching doctors:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
+ * Send files directly to a registered doctor
+ * @route POST /doctors/send-files
+ */
+router.post("/doctors/send-files", async (req, res) => {
+  try {
+    const { patientId, doctorId, selectedFiles } = req.body;
+    
+    if (!patientId || !doctorId || !Array.isArray(selectedFiles) || selectedFiles.length === 0) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
+
+    // Get patient and doctor info
+    const patient = await db.collection("userData").findOne({ _id: new ObjectId(patientId) });
+    const doctor = await db.collection("userData").findOne({ _id: new ObjectId(doctorId) });
+
+    if (!patient || !doctor) {
+      return res.status(404).json({ error: "Patient or doctor not found" });
+    }
+
+    if (doctor.role !== 'doctor') {
+      return res.status(400).json({ error: "Invalid doctor account" });
+    }
+
+    // Create or update doctor-patient relationship
+    const existingRelation = await db.collection("doctorPatients").findOne({
+      doctorId: doctorId,
+      patientId: patientId
+    });
+
+    if (!existingRelation) {
+      await db.collection("doctorPatients").insertOne({
+        doctorId: doctorId,
+        patientId: patientId,
+        patientName: patient.name || patient.username,
+        patientEmail: patient.email,
+        createdAt: new Date(),
+        fileCount: selectedFiles.length
+      });
+    } else {
+      await db.collection("doctorPatients").updateOne(
+        { _id: existingRelation._id },
+        { 
+          $inc: { fileCount: selectedFiles.length },
+          $set: { lastUpdated: new Date() }
+        }
+      });
+    }
+
+    // Create a file sharing request
+    await db.collection("doctorRequests").insertOne({
+      doctorId: doctorId,
+      doctorName: doctor.name || doctor.username,
+      doctorEmail: doctor.email,
+      patientId: patientId,
+      patientName: patient.name || patient.username,
+      patientEmail: patient.email,
+      files: selectedFiles,
+      status: "pending",
+      createdAt: new Date()
+    });
+
+    res.json({ 
+      success: true, 
+      message: "Files sent successfully to doctor" 
+    });
+
+  } catch (error) {
+    console.error("Error sending files to doctor:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+/**
  * Get doctor statistics
  * @route GET /doctor/stats/:doctorId
  */
