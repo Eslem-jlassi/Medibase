@@ -28,11 +28,12 @@ if (!dbConnectionPromise) {
             console.log('✅ Connected to MongoDB');
             app.locals.db = mongoose.connection.db;
             dbConnected = true;
-
+            return mongoose.connection.db;
         })
         .catch(err => {
             console.error('❌ MongoDB connection error:', err);
             dbConnected = false;
+            throw err;
         });
 }
 
@@ -42,19 +43,28 @@ app.use(async (req, res, next) => {
         return next();
     }
     
-    if (!dbConnected && dbConnectionPromise) {
-        try {
+    try {
+        // Wait for DB connection if not yet connected
+        if (!dbConnected && dbConnectionPromise) {
             await dbConnectionPromise;
-        } catch (err) {
-            return res.status(503).json({ error: 'Database connection failed' });
+            dbConnected = true;
         }
+        
+        // Ensure app.locals.db is set
+        if (!app.locals.db) {
+            if (mongoose.connection.db) {
+                app.locals.db = mongoose.connection.db;
+            } else {
+                console.error('❌ Database not available');
+                return res.status(503).json({ error: 'Database not initialized' });
+            }
+        }
+        
+        next();
+    } catch (err) {
+        console.error('❌ Database middleware error:', err);
+        return res.status(503).json({ error: 'Database connection failed' });
     }
-    
-    if (!app.locals.db && mongoose.connection.db) {
-        app.locals.db = mongoose.connection.db;
-    }
-    
-    next();
 });
 
 // Health check endpoint
@@ -65,7 +75,7 @@ app.get('/', (req, res) => {
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV || 'development',
         dbConnected: dbConnected,
-        version: '1.0.1' // Force new deployment
+        version: '1.0.2' // Fix database initialization and forgot password
     });
 });
 

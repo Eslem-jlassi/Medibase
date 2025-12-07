@@ -327,36 +327,156 @@ function DoctorHome() {
   const username = localStorage.getItem("username");
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
+  
+  // Données de démonstration pour les statistiques
   const [stats, setStats] = useState({
-    totalPatients: 0,
-    pendingRequests: 0,
-    activeChats: 0,
-    totalFiles: 0
+    totalPatients: 24,
+    pendingRequests: 5,
+    activeChats: 3,
+    totalFiles: 142
   });
-  const [requests, setRequests] = useState([]);
-  const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Données de démonstration pour les demandes en attente
+  const [requests, setRequests] = useState([
+    {
+      _id: 'demo1',
+      patientName: 'Sophie Martin',
+      patientEmail: 'sophie.martin@email.fr',
+      patientId: 'patient1',
+      createdAt: new Date('2025-12-07T09:30:00'),
+      viewed: false
+    },
+    {
+      _id: 'demo2',
+      patientName: 'Jean Dupont',
+      patientEmail: 'jean.dupont@email.fr',
+      patientId: 'patient2',
+      createdAt: new Date('2025-12-06T14:15:00'),
+      viewed: true
+    },
+    {
+      _id: 'demo3',
+      patientName: 'Marie Lefebvre',
+      patientEmail: 'marie.lefebvre@email.fr',
+      patientId: 'patient3',
+      createdAt: new Date('2025-12-06T10:45:00'),
+      viewed: false
+    },
+    {
+      _id: 'demo4',
+      patientName: 'Pierre Dubois',
+      patientEmail: 'pierre.dubois@email.fr',
+      patientId: 'patient4',
+      createdAt: new Date('2025-12-05T16:20:00'),
+      viewed: false
+    },
+    {
+      _id: 'demo5',
+      patientName: 'Camille Bernard',
+      patientEmail: 'camille.bernard@email.fr',
+      patientId: 'patient5',
+      createdAt: new Date('2025-12-05T11:00:00'),
+      viewed: true
+    }
+  ]);
+
+  // Données de démonstration pour les patients
+  const [patients, setPatients] = useState([
+    {
+      _id: 'p1',
+      patientId: 'patient1',
+      patientName: 'Sophie Martin',
+      patientEmail: 'sophie.martin@email.fr',
+      createdAt: new Date('2025-11-15T10:00:00'),
+      fileCount: 8
+    },
+    {
+      _id: 'p2',
+      patientId: 'patient2',
+      patientName: 'Jean Dupont',
+      patientEmail: 'jean.dupont@email.fr',
+      createdAt: new Date('2025-11-20T14:30:00'),
+      fileCount: 12
+    },
+    {
+      _id: 'p3',
+      patientId: 'patient3',
+      patientName: 'Marie Lefebvre',
+      patientEmail: 'marie.lefebvre@email.fr',
+      createdAt: new Date('2025-10-10T09:15:00'),
+      fileCount: 15
+    },
+    {
+      _id: 'p4',
+      patientId: 'patient4',
+      patientName: 'Pierre Dubois',
+      patientEmail: 'pierre.dubois@email.fr',
+      createdAt: new Date('2025-09-05T11:45:00'),
+      fileCount: 22
+    },
+    {
+      _id: 'p5',
+      patientId: 'patient5',
+      patientName: 'Camille Bernard',
+      patientEmail: 'camille.bernard@email.fr',
+      createdAt: new Date('2025-08-22T13:20:00'),
+      fileCount: 18
+    },
+    {
+      _id: 'p6',
+      patientId: 'patient6',
+      patientName: 'Luc Moreau',
+      patientEmail: 'luc.moreau@email.fr',
+      createdAt: new Date('2025-07-18T15:10:00'),
+      fileCount: 10
+    },
+    {
+      _id: 'p7',
+      patientId: 'patient7',
+      patientName: 'Emma Petit',
+      patientEmail: 'emma.petit@email.fr',
+      createdAt: new Date('2025-06-30T08:30:00'),
+      fileCount: 14
+    },
+    {
+      _id: 'p8',
+      patientId: 'patient8',
+      patientName: 'Thomas Robert',
+      patientEmail: 'thomas.robert@email.fr',
+      createdAt: new Date('2025-05-12T16:45:00'),
+      fileCount: 9
+    },
+    {
+      _id: 'p9',
+      patientId: 'patient9',
+      patientName: 'Julie Simon',
+      patientEmail: 'julie.simon@email.fr',
+      createdAt: new Date('2025-04-25T10:20:00'),
+      fileCount: 20
+    },
+    {
+      _id: 'p10',
+      patientId: 'patient10',
+      patientName: 'Nicolas Laurent',
+      patientEmail: 'nicolas.laurent@email.fr',
+      createdAt: new Date('2025-03-08T14:00:00'),
+      fileCount: 11
+    }
+  ]);
+
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetchDoctorData();
-    // Refresh every 10 seconds
-    const interval = setInterval(fetchDoctorData, 10000);
-    return () => clearInterval(interval);
+    // Pas besoin de fetch puisqu'on utilise des données de démo
+    setLoading(false);
   }, [userId]);
 
   const fetchDoctorData = async () => {
+    // Fonction gardée pour compatibilité mais utilise les données de démo
     try {
-      // Fetch stats
-      const statsRes = await axios.get(`${config.API_BASE_URL}/doctor/stats/${userId}`);
-      setStats(statsRes.data);
-
-      // Fetch pending requests
-      const requestsRes = await axios.get(`${config.API_BASE_URL}/doctor/requests/${userId}`);
-      setRequests(requestsRes.data.requests || []);
-      
-      // Fetch patients
-      const patientsRes = await axios.get(`${config.API_BASE_URL}/doctor/patients/${userId}`);
-      setPatients(patientsRes.data.patients || []);
+      setLoading(true);
+      // Simulation d'un délai de chargement
+      await new Promise(resolve => setTimeout(resolve, 500));
     } catch (error) {
       console.error("Error fetching doctor data:", error);
     } finally {
@@ -366,12 +486,21 @@ function DoctorHome() {
 
   const handleAcceptRequest = async (requestId, patientId) => {
     try {
-      await axios.post(`${config.API_BASE_URL}/doctor/accept-request`, {
-        requestId,
-        doctorId: userId,
-        patientId
-      });
-      fetchDoctorData();
+      // Simulation: Supprimer la demande et mettre à jour les stats
+      setRequests(prevRequests => prevRequests.filter(req => req._id !== requestId));
+      setStats(prevStats => ({
+        ...prevStats,
+        pendingRequests: prevStats.pendingRequests - 1,
+        totalPatients: prevStats.totalPatients + 1
+      }));
+      
+      // En mode production, cela serait:
+      // await axios.post(`${config.API_BASE_URL}/doctor/accept-request`, {
+      //   requestId,
+      //   doctorId: userId,
+      //   patientId
+      // });
+      // fetchDoctorData();
     } catch (error) {
       console.error("Error accepting request:", error);
     }
@@ -379,11 +508,19 @@ function DoctorHome() {
 
   const handleRejectRequest = async (requestId) => {
     try {
-      await axios.post(`${config.API_BASE_URL}/doctor/reject-request`, {
-        requestId,
-        doctorId: userId
-      });
-      fetchDoctorData();
+      // Simulation: Supprimer la demande
+      setRequests(prevRequests => prevRequests.filter(req => req._id !== requestId));
+      setStats(prevStats => ({
+        ...prevStats,
+        pendingRequests: prevStats.pendingRequests - 1
+      }));
+      
+      // En mode production, cela serait:
+      // await axios.post(`${config.API_BASE_URL}/doctor/reject-request`, {
+      //   requestId,
+      //   doctorId: userId
+      // });
+      // fetchDoctorData();
     } catch (error) {
       console.error("Error rejecting request:", error);
     }

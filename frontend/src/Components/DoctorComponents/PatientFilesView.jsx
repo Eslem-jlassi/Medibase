@@ -274,9 +274,21 @@ function PatientFilesView() {
 
   const fetchPatientInfo = async () => {
     try {
-      const doctorId = localStorage.getItem("userId");
-      const res = await axios.get(`${config.API_BASE_URL}/doctor/patient-info/${patientId}/${doctorId}`);
-      setPatient(res.data.patient);
+      // Données de démonstration pour le patient
+      const demoPatients = {
+        'patient1': { patientName: 'Sophie Martin', patientEmail: 'sophie.martin@email.fr' },
+        'patient2': { patientName: 'Jean Dupont', patientEmail: 'jean.dupont@email.fr' },
+        'patient3': { patientName: 'Marie Lefebvre', patientEmail: 'marie.lefebvre@email.fr' },
+        'patient4': { patientName: 'Pierre Dubois', patientEmail: 'pierre.dubois@email.fr' },
+        'patient5': { patientName: 'Camille Bernard', patientEmail: 'camille.bernard@email.fr' },
+        'patient6': { patientName: 'Luc Moreau', patientEmail: 'luc.moreau@email.fr' },
+        'patient7': { patientName: 'Emma Petit', patientEmail: 'emma.petit@email.fr' },
+        'patient8': { patientName: 'Thomas Robert', patientEmail: 'thomas.robert@email.fr' },
+        'patient9': { patientName: 'Julie Simon', patientEmail: 'julie.simon@email.fr' },
+        'patient10': { patientName: 'Nicolas Laurent', patientEmail: 'nicolas.laurent@email.fr' }
+      };
+      
+      setPatient(demoPatients[patientId] || { patientName: 'Patient Inconnu', patientEmail: 'inconnu@email.fr' });
     } catch (error) {
       console.error("Error fetching patient info:", error);
       toast.error("Impossible de charger les informations du patient");
@@ -285,8 +297,75 @@ function PatientFilesView() {
 
   const fetchFiles = async () => {
     try {
-      const res = await axios.get(`${config.API_BASE_URL}/doctor/patient-files/${patientId}`);
-      setFiles(res.data.files || []);
+      // Données de démonstration pour les fichiers médicaux
+      const demoFiles = [
+        {
+          _id: 'file1',
+          fileName: 'Radiographie Thorax.pdf',
+          category: 'Imagerie Médicale',
+          uploadDate: '2025-11-15T10:30:00',
+          contentType: 'application/pdf',
+          description: 'Radiographie thoracique de contrôle'
+        },
+        {
+          _id: 'file2',
+          fileName: 'Analyses Sanguines.pdf',
+          category: 'Analyses',
+          uploadDate: '2025-11-20T09:15:00',
+          contentType: 'application/pdf',
+          description: 'Bilan sanguin complet'
+        },
+        {
+          _id: 'file3',
+          fileName: 'IRM Cerebrale.jpg',
+          category: 'Imagerie Médicale',
+          uploadDate: '2025-11-22T14:45:00',
+          contentType: 'image/jpeg',
+          description: 'IRM cérébrale avec contraste'
+        },
+        {
+          _id: 'file4',
+          fileName: 'Ordonnance.pdf',
+          category: 'Prescriptions',
+          uploadDate: '2025-11-25T11:00:00',
+          contentType: 'application/pdf',
+          description: 'Ordonnance pour traitement antibiotique'
+        },
+        {
+          _id: 'file5',
+          fileName: 'Échographie Abdominale.jpg',
+          category: 'Imagerie Médicale',
+          uploadDate: '2025-11-28T16:20:00',
+          contentType: 'image/jpeg',
+          description: 'Échographie abdominale complète'
+        },
+        {
+          _id: 'file6',
+          fileName: 'ECG.pdf',
+          category: 'Cardiologie',
+          uploadDate: '2025-12-01T08:30:00',
+          contentType: 'application/pdf',
+          description: 'Électrocardiogramme au repos'
+        },
+        {
+          _id: 'file7',
+          fileName: 'Scanner Abdominal.jpg',
+          category: 'Imagerie Médicale',
+          uploadDate: '2025-12-03T10:15:00',
+          contentType: 'image/jpeg',
+          description: 'Scanner abdominal injecté'
+        },
+        {
+          _id: 'file8',
+          fileName: 'Compte Rendu Consultation.pdf',
+          category: 'Consultations',
+          uploadDate: '2025-12-05T15:00:00',
+          contentType: 'application/pdf',
+          description: 'Compte rendu de consultation spécialisée'
+        }
+      ];
+      
+      setFiles(demoFiles);
     } catch (error) {
       console.error("Error fetching files:", error);
       toast.error("Impossible de charger les fichiers");
@@ -312,8 +391,12 @@ function PatientFilesView() {
 
   const handleViewFile = async (fileId) => {
     try {
-      const res = await axios.get(`${config.API_BASE_URL}/view-file/${fileId}`);
-      window.open(res.data.fileUrl, '_blank');
+      // Simulation : afficher un message car ce sont des fichiers de démo
+      toast.info("Mode démonstration : Fichier fictif - Fonctionnalité de visualisation disponible en production");
+      console.log("Viewing file:", fileId);
+      // En production :
+      // const res = await axios.get(`${config.API_BASE_URL}/view-file/${fileId}`);
+      // window.open(res.data.fileUrl, '_blank');
     } catch (error) {
       console.error("Error viewing file:", error);
       toast.error("Impossible d'ouvrir le fichier");
@@ -322,16 +405,20 @@ function PatientFilesView() {
 
   const handleDownloadFile = async (fileId, fileName) => {
     try {
-      const res = await axios.get(`${config.API_BASE_URL}/download-file/${fileId}`, {
-        responseType: 'blob'
-      });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', fileName);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      // Simulation : afficher un message car ce sont des fichiers de démo
+      toast.info(`Mode démonstration : Téléchargement simulé de "${fileName}"`);
+      console.log("Downloading file:", fileId, fileName);
+      // En production :
+      // const res = await axios.get(`${config.API_BASE_URL}/download-file/${fileId}`, {
+      //   responseType: 'blob'
+      // });
+      // const url = window.URL.createObjectURL(new Blob([res.data]));
+      // const link = document.createElement('a');
+      // link.href = url;
+      // link.setAttribute('download', fileName);
+      // document.body.appendChild(link);
+      // link.click();
+      // link.remove();
     } catch (error) {
       console.error("Error downloading file:", error);
       toast.error("Impossible de télécharger le fichier");

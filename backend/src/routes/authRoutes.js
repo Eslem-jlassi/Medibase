@@ -126,21 +126,30 @@ router.post("/send-verification-forgot-password/:username", async (req, res) => 
   const { username } = req.params;
   const { email } = req.body;
 
+  console.log("🔍 [FORGOT-PASSWORD] Request received:", { username, email });
+
   if (!username || !email) {
     return res.status(400).json({ error: "Username and email are required" });
   }
 
   try {
     const db = getDb(req);
-    if (!db) return res.status(503).json({ error: "Database not initialized" });
+    if (!db) {
+      console.error("❌ [FORGOT-PASSWORD] Database not initialized");
+      return res.status(503).json({ error: "Database not initialized" });
+    }
     
+    console.log("🔍 [FORGOT-PASSWORD] Searching for user:", username);
     const user = await db.collection("userData").findOne({ username });
 
     if (!user) {
+      console.log("❌ [FORGOT-PASSWORD] User not found:", username);
       return res.status(404).json({ error: "User not found" });
     }
 
+    console.log("✅ [FORGOT-PASSWORD] User found:", user.username);
     if (user.email !== email) {
+      console.log("❌ [FORGOT-PASSWORD] Email mismatch:", { provided: email, registered: user.email });
       return res.status(404).json({ error: "Email does not match registered user" });
     }
 
