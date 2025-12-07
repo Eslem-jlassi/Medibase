@@ -10,12 +10,14 @@ import {
     HelpDescription,
     SupportLink
 } from "./Styles/OtherStyles";
+import Navbar from "./HomeComponents/navbar";
 import HomeButton from "./HomeBtn";
 
 
 function Help() {
   return (
     <>
+    <Navbar />
     <HomeButton />
     <HelpContainer>
       <HelpTitle>Help & Support</HelpTitle>

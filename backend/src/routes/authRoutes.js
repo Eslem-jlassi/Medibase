@@ -10,24 +10,10 @@ const axios = require("axios");
 
 const router = express.Router();
 
-let db;
-
-// Initialize MongoDB connection
-async function initializeMongoDB() {
-  try {
-    const client = await MongoClient.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    db = client.db("medibase");
-    console.log("MongoDB connected successfully in authRoutes.js");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-    throw error;
-  }
+// Helper to get db from app.locals
+function getDb(req) {
+  return req.app.locals.db;
 }
-
-initializeMongoDB().catch(console.error);
 
 /**
  * Endpoint to send a verification email.
@@ -48,6 +34,8 @@ router.post("/send-verification/:userId", async (req, res) => {
   }
 
   try {
+      const db = getDb(req);
+      if (!db) return res.status(503).json({ error: "Database not initialized" });
       const userSessionCollection = db.collection("userSessionData");
       
       // Find the user session
@@ -74,10 +62,65 @@ router.post("/send-verification/:userId", async (req, res) => {
       res.status(500).json({ error: error.message });
   }
 });
+
 /**
  * Endpoint to verify the email.
  * @route GET /verify-email
  */
+router.get("/verify-email", async (req, res) => {
+  const { token } = req.query;
+  console.log('🔍 Verification request received:', { token: token ? token.substring(0, 50) + '...' : 'No token' });
+
+  if (!token) {
+    return res.status(400).json({ error: "Token is required" });
+  }
+
+  try {
+    const db = getDb(req);
+    if (!db) return res.status(503).send("Database not initialized");
+    const userSessionCollection = db.collection("userSessionData");
+
+    console.log('🔐 Decoding token...');
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const email = decoded.email;
+    console.log('✅ Token decoded successfully:', email);
+
+    // Find the user session that contains this email
+    console.log('🔍 Searching for user session...');
+    const userSession = await userSessionCollection.findOne({ "emails.email": email });
+    console.log('📋 User session found:', userSession ? 'Yes' : 'No');
+
+    if (!userSession) {
+      return res.status(404).json({ error: "Email not found" });
+    }
+
+    // Update the email status in the array for ALL sessions containing this email
+    console.log('💾 Updating email status for all sessions...');
+    try {
+      const updateResult = await userSessionCollection.updateMany(
+        { "emails.email": email },
+        { $set: { "emails.$.status": "verified" } }
+      );
+      console.log('✅ Update result:', updateResult);
+
+      // Retrieve the updated user session
+      console.log('🔍 Fetching updated session...');
+      const updatedUserSession = await userSessionCollection.findOne({ userId: userSession.userId });
+      console.log('📋 Updated session:', updatedUserSession ? 'Found' : 'Not found');
+
+      console.log('✉️ Sending success response...');
+      // Send an HTML page that notifies opener then shows success text
+      res.send(`<!DOCTYPE html><html><head><meta charset='utf-8'/><title>Email Verification</title><style>body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#f3e9ff,#eef7f2);display:flex;align-items:center;justify-content:center;height:100vh;margin:0} .card{background:#fff;padding:40px 50px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.15);text-align:center;max-width:560px} h1{margin-top:0;font-size:28px;color:#111} p{color:#333;font-size:16px;line-height:1.4} .close-btn{margin-top:24px;background:#003366;color:#fff;border:none;padding:12px 24px;font-size:15px;border-radius:6px;cursor:pointer} .close-btn:hover{background:#002244}</style></head><body><div class='card'><h1>Email Verification</h1><p>Email verified successfully. You can now close this window.</p><button class='close-btn' onclick='window.close()'>Close</button></div><script>try{if(window.opener){window.opener.postMessage({emailVerified:"${email}",status:"verified"},"*");}}catch(e){console.error(e);}</script></body></html>`);
+    } catch (dbError) {
+      console.error('❌ Database update error:', dbError);
+      throw dbError; // Re-throw to be caught by main catch block
+    }
+  } catch (error) {
+    console.error('❌ Verification error:', error);
+    res.status(400).json({ error: "Invalid or expired token" });
+  }
+});
 
 router.post("/send-verification-forgot-password/:username", async (req, res) => {
   const { username } = req.params;
@@ -88,6 +131,9 @@ router.post("/send-verification-forgot-password/:username", async (req, res) => 
   }
 
   try {
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
+    
     const user = await db.collection("userData").findOne({ username });
 
     if (!user) {
@@ -98,51 +144,20 @@ router.post("/send-verification-forgot-password/:username", async (req, res) => 
       return res.status(404).json({ error: "Email does not match registered user" });
     }
 
-    // Update verification status or generate token
-    // await db.collection("userData").updateOne(
-    //   { _id: user._id },
-    //   { $set: { verificationStatus: "pending" } }
-    // );
-
-    await sendVerificationEmailPasswordReset(email);
-    res.json({ message: "Verification email sent successfully" });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.get("/verify-email", async (req, res) => {
-  const { token } = req.query;
-
-  if (!token) {
-    return res.status(400).json({ error: "Token is required" });
-  }
-
-  try {
-    const userSessionCollection = db.collection("userSessionData");
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const email = decoded.email;
-
-    // Find the user session that contains this email
-    const userSession = await userSessionCollection.findOne({ "emails.email": email });
-
-    if (!userSession) {
-      return res.status(404).json({ error: "Email not found" });
+    // Send password reset email
+    console.log("📧 [FORGOT-PASSWORD] Sending reset email to:", email);
+    try {
+      await sendVerificationEmailPasswordReset(email);
+      console.log("✅ [FORGOT-PASSWORD] Email sent successfully to:", email);
+    } catch (emailError) {
+      console.error("❌ [FORGOT-PASSWORD] Failed to send email:", emailError);
+      return res.status(500).json({ error: "Failed to send reset email. Please try again." });
     }
 
-    // Update the email status in the array
-    await userSessionCollection.updateOne(
-      { "emails.email": email },
-      { $set: { "emails.$.status": "verified" } }
-    );
-
-    // Retrieve the updated user session
-    const updatedUserSession = await userSessionCollection.findOne({ userId: userSession.userId });
-
-    res.json({ message: "Email verified successfully", userSession: updatedUserSession });
-  } catch (error) {
-    res.status(400).json({ error: "Invalid or expired token" });
+    res.json({ message: "Verification email sent successfully" });
+  } catch (err) {
+    console.error("❌ [FORGOT-PASSWORD] Route error:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -169,7 +184,13 @@ router.get('/validate-session/:sessionId', async (req, res) => {
       const token = req.query.token;
       const sessionOwnerId = req.headers["x-session-owner"]; // Extract sessionOwnerId from headers
 
+      console.log('🔍 [VALIDATE] SessionId:', sessionId);
+      console.log('🎫 [VALIDATE] Token present:', token ? 'Yes (length: ' + token.length + ')' : 'No');
+      console.log('👤 [VALIDATE] Session owner ID:', sessionOwnerId || 'Not provided');
+
       if (!token) {
+        const db = getDb(req);
+        if (!db) return res.status(503).json({ error: "Database not initialized" });
         await db.collection("sessionData").updateOne(
           { sessionId },
           { $set: { sessionState: "Inactive" } }
@@ -178,20 +199,22 @@ router.get('/validate-session/:sessionId', async (req, res) => {
       }
 
       // Verify JWT token
+      console.log('🔐 [VALIDATE] Verifying JWT token...');
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('✅ [VALIDATE] Token decoded successfully:', decoded);
+      
       if (decoded.sessionId !== sessionId) {
+          console.log('❌ [VALIDATE] Session ID mismatch');
           return res.status(403).json({ message: "Access Denied: Invalid session." });
       }
 
       // Fetch session from database
+      const db = getDb(req);
+      if (!db) return res.status(503).json({ error: "Database not initialized" });
       const sessionItem = await db.collection("sessionData").findOne({ sessionId });
 
       if (!sessionItem) {
           return res.status(404).json({ message: "Access Denied: Session not found." });
-      }
-
-      if(sessionItem.status=="Inactive"){
-        return res.status(404).json({message: "Access Denied: Session inactive!"});
       }
 
       // ✅ If first-time access, assign a sessionOwnerId and lock the session
@@ -213,14 +236,29 @@ router.get('/validate-session/:sessionId', async (req, res) => {
       return res.status(403).json({ message: "Access Denied: This session is already in use." });
 
   } catch (error) {
-      console.error("Error in validate-session:", error.message);
-      return res.status(403).json({ message: "Invalid or expired token." });
+      console.error("❌ [VALIDATE] Error in validate-session:", error);
+      console.error("Error name:", error.name);
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      
+      // Handle specific JWT errors
+      if (error.name === 'JsonWebTokenError') {
+          return res.status(403).json({ message: "Invalid token." });
+      }
+      if (error.name === 'TokenExpiredError') {
+          return res.status(403).json({ message: "Token expired." });
+      }
+      
+      return res.status(500).json({ message: "Server error during validation.", error: error.message });
   }
 });
 
 router.get("/fetch-emails/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
+
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
 
     // Find the userSessionData entry for the given userId
     const sessionData = await db.collection("userSessionData").findOne({ userId });
@@ -246,6 +284,9 @@ router.post("/enter-email/:userId", async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
+
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
 
     // Check if the user exists in userSessionData
     const userSession = await db.collection("userSessionData").findOne({ userId });
@@ -283,6 +324,9 @@ router.delete("/delete-email/:userId", async (req, res) => {
           return res.status(400).json({ error: "Email is required for deletion." });
       }
 
+      const db = getDb(req);
+      if (!db) return res.status(503).json({ error: "Database not initialized" });
+      
       // Check if user session data exists
       const userSession = await db.collection("userSessionData").findOne({ userId });
 
@@ -316,7 +360,10 @@ router.get("/getSessionFiles/:userId/:doctorName", async (req, res) => {
     const { userId} = req.params;
     const doctorName = decodeURIComponent(req.params.doctorName); // Decode doctor name
 
-    //console.log("Received Doctor Name:", doctorName); // Debugging
+    console.log('📂 [FILES] Getting files for userId:', userId, 'doctorName:', doctorName);
+    
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
     
     // Find the session data that matches the userId and doctorName
     const session = await db.collection("sessionData").findOne({ userId, doctorName });
@@ -354,6 +401,9 @@ router.delete("/deleteFileFromSession/:userId/:doctorName", async (req, res) => 
     }
 
     console.log(`Attempting to delete ${fileName} for session: User ${userId}, Doctor ${doctorName}`);
+
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
 
     // Step 1: Fetch File ID using existing getFileId route
     const fileIdResponse = await axios.get(`http://localhost:3001/getFileId/${userId}/${fileName}`);
@@ -406,6 +456,9 @@ router.post("/addFilesToSession/:userId/:doctorName", async (req, res) => {
       return res.status(400).json({ error: "Invalid request parameters." });
     }
 
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
+
     // Step 1: Fetch session details
     const session = await db.collection("sessionData").findOne({ userId, doctorName });
 
@@ -452,6 +505,8 @@ router.get("/getActiveSessions/:userId", async (req, res) => {
     }
 
     // Fetch active chat sessions for the user
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
     const sessions = await db.collection("sessionData")
       .find({ userId, sessionState: "Active" }) // Only fetch active sessions
       .project({ doctorName: 1, _id: 0 }) // Return only doctor names
@@ -478,6 +533,8 @@ router.get("/getSessionDetails/:sessionId", async (req, res) => {
     }
 
     // Find session by sessionId
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
     const session = await db.collection("sessionData").findOne({ sessionId });
 
     if (!session) {
@@ -498,6 +555,9 @@ router.put("/terminateSession/:userId/:doctorName", async (req, res) => {
   try {
     const { userId } = req.params;
     const doctorName = decodeURIComponent(req.params.doctorName); // Decode doctor name
+
+    const db = getDb(req);
+    if (!db) return res.status(503).json({ error: "Database not initialized" });
 
     // Find the session that matches userId and doctorName
     const session = await db.collection("sessionData").findOne({ userId, doctorName });

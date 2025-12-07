@@ -21,6 +21,7 @@ import {
 } from "../Styles/SessionFilesStyles";
 import { showSuccessToast, showErrorToast } from "../toastConfig";
 import HomeButton from "../HomeBtn";
+import config from "../../config/api";
 
 const ActiveFiles = () => {
   const { userId, doctorName } = useParams();
@@ -34,7 +35,7 @@ const ActiveFiles = () => {
   const fetchFiles = async () => {
     try {
       const encodedDoctorName = encodeURIComponent(doctorName);
-      const response = await axios.get(`http://localhost:3001/getSessionFiles/${userId}/${encodedDoctorName}`);
+      const response = await axios.get(`${config.API_BASE_URL}/getSessionFiles/${userId}/${encodedDoctorName}`);
       console.log("Fetched Data:", response.data);
       setFiles(response.data);
     } catch (error) {
@@ -60,7 +61,7 @@ const ActiveFiles = () => {
     if (!confirmDelete) return;
   
     try {
-      await axios.delete(`http://localhost:3001/deleteFileFromSession/${userId}/${doctorName}`, {
+      await axios.delete(`${config.API_BASE_URL}/deleteFileFromSession/${userId}/${doctorName}`, {
         data: { fileName },
       });
   
@@ -74,7 +75,7 @@ const ActiveFiles = () => {
 
   const handleTermination = async () => {
     try {
-      const response = await axios.put(`http://localhost:3001/terminateSession/${userId}/${doctorName}`);
+      const response = await axios.put(`${config.API_BASE_URL}/terminateSession/${userId}/${doctorName}`);
   
       if (response.data.success) {
         showSuccessToast("Session terminated successfully!");

@@ -7,7 +7,7 @@ function HomeButton({ isViewAllFilesPage, path = "/home" }) {
   const navigate = useNavigate();
 
   return (
-    <ButtonWrapper isViewAllFilesPage={isViewAllFilesPage}>
+    <ButtonWrapper $isViewAllFilesPage={isViewAllFilesPage}>
       <StyledButton onClick={() => navigate(path)}>
         <FaHome />
       </StyledButton>

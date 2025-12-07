@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import Navbar from "./HomeComponents/navbar";
 import HomeButton from "./HomeBtn";
 import { showSuccessToast, showErrorToast } from "./toastConfig";
 import axios from "axios";
@@ -7,6 +8,7 @@ import { ToastContainer } from "react-toastify";
 import { ImBin } from "react-icons/im";
 import { TiTickOutline } from "react-icons/ti";
 import "../Components/Styles/styles.css";
+import config from "../config/api";
 
 // Styled Components (Updated for Verify & Delete Buttons)
 export const StyledVerifyEmails = styled.div`
@@ -152,23 +154,47 @@ const VerifyEmails = () => {
   const [refresh, setRefresh] = useState(false);
   const userId = localStorage.getItem("userId");
 
-  useEffect(() => {
-    const fetchEmails = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:3001/fetch-emails/${userId}`
-        );
-        setEmails(response.data.emails || []);
-      } catch (error) {
-        console.error("Error fetching emails:", error);
-        setEmails([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Helper to fetch emails
+  const fetchEmails = async () => {
+    try {
+      const response = await axios.get(
+        `${config.API_BASE_URL}/fetch-emails/${userId}`
+      );
+      setEmails(response.data.emails || []);
+    } catch (error) {
+      console.error("Error fetching emails:", error);
+      setEmails([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchEmails();
   }, [userId, refresh]);
+
+  // Listen for postMessage from verification popup
+  useEffect(() => {
+    function handleMessage(e) {
+      if (e.data?.emailVerified) {
+        showSuccessToast(`Email ${e.data.emailVerified} verified!`);
+        setRefresh(r => !r); // trigger refetch
+      }
+    }
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  // Polling while any email is pending/unverified
+  useEffect(() => {
+    const hasPending = emails.some(e => e.status === 'pending' || e.status === 'unverified');
+    if (!hasPending) return;
+    const id = setInterval(() => {
+      console.log('Polling for email status updates...');
+      fetchEmails();
+    }, 3000); // Reduced to 3 seconds for faster updates
+    return () => clearInterval(id);
+  }, [emails]);
 
   const handleAdd = async () => {
     if (!newEmail) {
@@ -178,7 +204,7 @@ const VerifyEmails = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:3001/enter-email/${userId}`,
+        `${config.API_BASE_URL}/enter-email/${userId}`,
         {
           email: newEmail,
         }
@@ -201,7 +227,7 @@ const VerifyEmails = () => {
   const handleVerify = async (email) => {
     try {
       const response = await axios.post(
-        `http://localhost:3001/send-verification/${userId}`,
+        `${config.API_BASE_URL}/send-verification/${userId}`,
         { email }
       );
       showSuccessToast("Verification email sent successfully!");
@@ -215,7 +241,7 @@ const VerifyEmails = () => {
   const handleDelete = async (email) => {
     try {
       const response = await axios.delete(
-        `http://localhost:3001/delete-email/${userId}`,
+        `${config.API_BASE_URL}/delete-email/${userId}`,
         {
           data: { email }, // Sending email in request body
         }
@@ -234,10 +260,13 @@ const VerifyEmails = () => {
   };
 
   return (
+    <>
+    <Navbar />
     <StyledVerifyEmails>
       <HomeButton />
       <ToastContainer />
       <h1>Verify Emails</h1>
+      <button style={{position:'absolute', right:20, top:20}} onClick={() => fetchEmails()}>Refresh</button>
       {loading ? (
         <p>Loading emails...</p>
       ) : emails.length > 0 ? (
@@ -278,6 +307,7 @@ const VerifyEmails = () => {
         <button onClick={handleAdd}>Add</button>
       </div>
     </StyledVerifyEmails>
+    </>
   );
 };
 

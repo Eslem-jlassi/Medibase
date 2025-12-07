@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import { showSuccessToast,showErrorToast } from "../toastConfig";
+import config from '../../config/api.js';
 
 
 const VerifySession = () => {
@@ -25,11 +26,11 @@ const VerifySession = () => {
     const verifyEmail = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3001/verify-email?token=${token}`
+          `${config.API_BASE_URL}/verify-email?token=${token}`
         );
-
-        setMessage(response.data.message);
-        showSuccessToast(response.data.message);
+        const msg = typeof response.data === 'string' ? 'Email verified successfully' : response.data.message;
+        setMessage(msg);
+        showSuccessToast(msg);
       } catch (error) {
         setMessage(error.response?.data?.error || "Verification failed.");
         showErrorToast(error.response?.data?.error || "Verification failed.");

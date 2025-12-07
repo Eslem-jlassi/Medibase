@@ -1,7 +1,18 @@
 import React from "react";
 import { RouterProvider, createBrowserRouter, Outlet } from "react-router-dom";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// New Modern Components
+import AuthPage from "./Components/LoginComponents/AuthPage";
+import PatientDashboard from "./Components/Patient/PatientDashboard";
+import DoctorDashboard from "./Components/Doctor/DoctorDashboard";
+
+// Legacy Components (kept for backward compatibility)
 import Login from "./Components/LoginComponents/Login";
 import Home from "./Components/Home";
+import DoctorHome from "./Components/DoctorComponents/DoctorHome";
+import PatientFilesView from "./Components/DoctorComponents/PatientFilesView";
 import ViewAllFiles from "./Components/viewAllFiles";
 import AddCategory from "./Components/AddCategories";
 import Help from "./Components/help";
@@ -32,52 +43,140 @@ const Layout = () => {
 };
 const router = createBrowserRouter([
   {
-    path: "/", // Root path
-    element: <Login />, // Default page is the Login component
-  },
-  {
-    path: "/", // Main application layout
-    element: (
-      <ProtectedRoute>
-        <Layout />
-      </ProtectedRoute>
-    ), // Use Layout as the parent route
-    children: [
-      { path: "home", element: <Home /> },
-      { path: "viewAllFiles", element: <ViewAllFiles /> },
-      { path: "addCategory", element: <AddCategory /> },
-      { path: "help", element: <Help /> },
-      { path: "verify-emails",element: <VerifyEmails />},
-      { path: "active-chat/:userId/:doctorName", element: <ActiveFiles />},
-      {path: "view-chats/:userId",element: <ActiveChats />},
-      {path: "add-files/:userId/:doctorName",element: <AddFilesPage />},
-    ],
-  },
-  {
-    path: "/verify-email", // Independent route
-    element: <VerifySession />, // No Navbar, displays separately
-  },
-  {
-    path: "/view-files/:sessionId", // Independent route
-    element: <ViewFilesByDoctor />, // No Navbar, displays separately
+    path: "/", // Root path - Original Login
+    element: <Login />,
   },
   {
     path: "/register",
     element: <RegisterPage />,
   },
   {
-    path:"forgot-password",
+    path: "/forgot-password",
     element: <ForgotPassword />,
   },
   {
-    path:"reset-password",
-    element:<ResetPasswordPage />,
+    path: "/reset-password",
+    element: <ResetPasswordPage />,
+  },
+  // Patient Home - Original Interface
+  {
+    path: "/home",
+    element: (
+      <ProtectedRoute>
+        <Home />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/doctor-dashboard",
+    element: (
+      <ProtectedRoute>
+        <DoctorHome />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/doctor/patient/:patientId",
+    element: (
+      <ProtectedRoute>
+        <PatientFilesView />
+      </ProtectedRoute>
+    ),
+  },
+  // Legacy patient routes (original system)
+  {
+    path: "/viewAllFiles",
+    element: (
+      <ProtectedRoute>
+        <ViewAllFiles />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/addCategory",
+    element: (
+      <ProtectedRoute>
+        <AddCategory />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/help",
+    element: (
+      <ProtectedRoute>
+        <Help />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/verify-emails",
+    element: (
+      <ProtectedRoute>
+        <VerifyEmails />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/view-chats/:userId",
+    element: (
+      <ProtectedRoute>
+        <ActiveChats />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/active-chat/:userId/:doctorName",
+    element: (
+      <ProtectedRoute>
+        <ActiveFiles />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/add-files/:userId/:doctorName",
+    element: (
+      <ProtectedRoute>
+        <AddFilesPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/verify-email", // Independent route
+    element: <VerifySession />,
+  },
+  {
+    path: "/view-files/:sessionId", // Independent route
+    element: <ViewFilesByDoctor />,
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/reset-password",
+    element: <ResetPasswordPage />,
   }
 ]);
 function App() {
   return (
     <>
       <RouterProvider router={router} />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
     </>
   );
 }

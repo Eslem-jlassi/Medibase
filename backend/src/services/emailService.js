@@ -2,99 +2,156 @@ const nodemailer = require("nodemailer");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER, 
-    pass: process.env.EMAIL_PASS, 
-  },
-});
+/**
+ * Vérifie que les variables d’environnement nécessaires sont présentes.
+ */
+function checkMailCredentials() {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error("⚠️ EMAIL_USER ou EMAIL_PASS manquant dans .env");
+  }
+  if (!process.env.JWT_SECRET) {
+    throw new Error("⚠️ JWT_SECRET manquant dans .env");
+  }
+}
 
 /**
- * Sends a verification email with a JWT token that expires in 10 minutes.
- * @param {string} email - The recipient's email address.
+ * Crée le transporter nodemailer pour l’envoi réel ou null pour le dev.
+ */
+function getTransporter() {
+  if (process.env.NODE_ENV === "development") {
+    return null; // Emails simulés en dev
+  }
+  checkMailCredentials();
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+}
+
+/**
+ * Envoie un e-mail de vérification (lien de confirmation).
+ * En dev : affiche le lien dans la console.
+ * En prod : envoie réellement l’email.
  */
 const sendVerificationEmail = async (email) => {
   try {
+    checkMailCredentials();
     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "10m" });
+    const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
+    const verificationLink = `${baseUrl}/verify-email?token=${token}`;
 
-    const verificationLink = `http://localhost:3000/verify-email?token=${token}`;
+    if (process.env.NODE_ENV === "development") {
+      console.log('\n═════════════════════════════════');
+      console.log('📧 [DEV MODE] Vérification Email (pas d’envoi réel)');
+      console.log('Pour:', email);
+      console.log('Lien de vérification:', verificationLink);
+      console.log('Expiration: 10 minutes');
+      console.log('═════════════════════════════════\n');
+      return { success: true, message: 'Email simulé en mode développement' };
+    }
 
+    const transporter = getTransporter();
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Medibase - Verify Your Email",
-      text: `Click the link to verify your email: ${verificationLink}`,
-      html: ` <p>Click <a href="${verificationLink}" style="color: #1a73e8; text-decoration: none;">here</a> to verify your email.</p>
-        <p>This link will expire in <b>10 minutes</b>.</p>
-        <p>If you did not request this, please ignore this email.</p>`,
+      subject: "Medibase - Vérification Email",
+      text: `Clique sur ce lien pour valider ton email: ${verificationLink}`,
+      html: `<p>Clique <a href="${verificationLink}" style="color: #1a73e8; text-decoration: none;">ici</a> pour valider ton email.</p>
+             <p>Délai: 10 minutes.</p>`,
     };
 
     await transporter.sendMail(mailOptions);
-    console.log("Verification email sent to:", email);
+    console.log("✅ Email de vérification envoyé à :", email);
+    return { success: true, message: 'Email envoyé avec succès' };
   } catch (error) {
-    console.error("Error sending verification email:", error);
-    throw new Error("Failed to send verification email");
+    console.error("❌ Erreur envoi email de vérification :", error);
+    throw new Error("Échec de l'envoi de l'e-mail de vérification");
   }
 };
 
+/**
+ * Envoie un e-mail de réinitialisation du mot de passe.
+ */
 const sendVerificationEmailPasswordReset = async (email) => {
   try {
+    checkMailCredentials();
     const token = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "10m" });
+    const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
+    const verificationLink = `${baseUrl}/reset-password?token=${token}`;
 
-    const verificationLink = `http://localhost:3000/reset-password?token=${token}`;
+    if (process.env.NODE_ENV === "development") {
+      console.log('\n═════════════════════════════════');
+      console.log('📧 [DEV MODE] Password Reset Email (pas d’envoi réel)');
+      console.log('Pour:', email);
+      console.log('Lien de reset:', verificationLink);
+      console.log('Expiration: 10 minutes');
+      console.log('═════════════════════════════════\n');
+      return { success: true, message: 'Email simulé en mode développement' };
+    }
 
-
+    const transporter = getTransporter();
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Medibase - Rest Your Password",
-      text: `Click the link to verify your email and reset your password: ${verificationLink}`,
-      html: ` <p>Click <a href="${verificationLink}" style="color: #1a73e8; text-decoration: none;">here</a> to verify your email and reset your password.</p>
-        <p>This link will expire in <b>10 minutes</b>.</p>
-        <p>If you did not request this, please ignore this email.</p>`,
+      subject: "Medibase - Réinitialisation du mot de passe",
+      text: `Clique sur ce lien pour réinitialiser ton mot de passe: ${verificationLink}`,
+      html: `<p>Clique <a href="${verificationLink}" style="color: #1a73e8; text-decoration: none;">ici</a> pour réinitialiser ton mot de passe.</p>
+             <p>Délai: 10 minutes.</p>`,
     };
 
     await transporter.sendMail(mailOptions);
-    console.log("Verification email sent to:", email);
+    console.log("✅ Email de reset envoyé à :", email);
+    return { success: true, message: 'Email envoyé avec succès' };
   } catch (error) {
-    console.error("Error sending verification email:", error);
-    throw new Error("Failed to send verification email");
+    console.error("❌ Erreur envoi email reset :", error);
+    throw new Error("Échec de l'envoi de l'e-mail de reset");
   }
 };
 
+/**
+ * Envoie un e-mail sécurisé avec un lien d’accès aux fichiers du patient.
+ */
 const sendFilesEmail = async (doctorEmail, sessionId) => {
   try {
-      // Generate a JWT token that expires in 1 hour
-      const token = jwt.sign({ sessionId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    checkMailCredentials();
+    const token = jwt.sign({ sessionId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const baseUrl = process.env.APP_BASE_URL || "http://localhost:3000";
+    const link = `${baseUrl}/view-files/${sessionId}?token=${token}`;
 
-      // Secure link for the doctor to access the session
-      const link = `http://localhost:3000/view-files/${sessionId}?token=${token}`;
+    if (process.env.NODE_ENV === "development") {
+      console.log('\n═════════════════════════════════');
+      console.log('[DEV MODE] Files Access Email (pas d’envoi réel)');
+      console.log('Pour:', doctorEmail);
+      console.log('Lien d’accès:', link);
+      console.log('Expiration: 1 heure');
+      console.log('═════════════════════════════════\n');
+      return { success: true, message: 'Email simulé en mode développement' };
+    }
 
-      // Configure Nodemailer
-      const transporter = nodemailer.createTransport({
-          service: 'Gmail',
-          auth: {
-              user: process.env.EMAIL_USER,
-              pass: process.env.EMAIL_PASS
-          }
-      });
+    const transporter = getTransporter();
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: doctorEmail,
+      subject: 'Accès sécurisé aux fichiers patient',
+      text: `Accès patient sécurisé : ${link}`,
+      html: `<p>Accédez en toute sécurité aux fichiers patient : <a href="${link}">${link}</a></p>
+             <p>Délai: 1 heure.</p>`
+    };
 
-      // Email content
-      const mailOptions = {
-          from: process.env.EMAIL_USER,
-          to: doctorEmail,
-          subject: 'Secure Access to Patient Files',
-          text: `You have been granted secure access to patient files. Click the link below to view them:\n\n${link}\n\nThis link will expire in 1 hour for security reasons.`
-      };
-
-      // Send Email
-      await transporter.sendMail(mailOptions);
-      console.log('Email sent successfully to', doctorEmail);
+    await transporter.sendMail(mailOptions);
+    console.log('✅ Email fichiers envoyé à', doctorEmail);
+    return { success: true, message: 'Email envoyé avec succès' };
   } catch (error) {
-      console.error('Error sending email:', error);
+    console.error('❌ Erreur envoi email fichiers :', error);
+    throw new Error("Échec de l'envoi de l'e-mail fichiers");
   }
 };
 
-module.exports = { sendVerificationEmail, sendFilesEmail, sendVerificationEmailPasswordReset };
-
+module.exports = {
+  sendVerificationEmail,
+  sendFilesEmail,
+  sendVerificationEmailPasswordReset
+};

@@ -16,6 +16,7 @@ import {
 import ViewFileButton from "../ViewAllComponents/ViewFile";
 import Loading from "../HomeComponents/ExtraComponents/Loading";
 import NoFilesFound from "../HomeComponents/ExtraComponents/NoFiles";
+import config from "../../config/api";
 
 const ViewFilesByDoctor = () => {
     const { sessionId } = useParams();
@@ -41,7 +42,7 @@ const ViewFilesByDoctor = () => {
         let sessionOwnerId = localStorage.getItem("sessionOwnerId");
 
         axios
-            .get(`http://localhost:3001/validate-session/${sessionId}?token=${token}`, {
+            .get(`${config.API_BASE_URL}/validate-session/${sessionId}?token=${token}`, {
                 headers: { "x-session-owner": sessionOwnerId || "" },
             })
             .then((response) => {
@@ -73,7 +74,7 @@ const ViewFilesByDoctor = () => {
     const [doctorName, setDoctorName] = useState("");
 
     useEffect(() => {
-        axios.get(`http://localhost:3001/getSessionDetails/${sessionId}`)
+        axios.get(`${config.API_BASE_URL}/getSessionDetails/${sessionId}`)
             .then(response => {
                 setUserId(response.data.userId);
                 setDoctorName(response.data.doctorName);
@@ -91,7 +92,7 @@ const ViewFilesByDoctor = () => {
         try {
               setLoadingFiles(true);
           const encodedDoctorName = encodeURIComponent(doctorName);
-          const response = await axios.get(`http://localhost:3001/getSessionFiles/${userId}/${encodedDoctorName}`);
+          const response = await axios.get(`${config.API_BASE_URL}/getSessionFiles/${userId}/${encodedDoctorName}`);
           console.log("Fetched Data:", response.data);
           setFiles(response.data);
         } catch (error) {

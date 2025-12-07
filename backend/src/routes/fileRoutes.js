@@ -37,18 +37,27 @@ async function initializeMongoDB() {
 // Initialize MongoDB connection
 initializeMongoDB().catch(console.error);
 
-// Login Route
+// Login Route (Updated with role support)
 router.post("/login", async (req, res) => {
-  const { username, password } = req.body;
+  const { username, email, password, role } = req.body;
+  const loginField = username || email;
 
-  if (!username || !password) {
-    return res.status(400).json({ error: "Username and password are required" });
+  if (!loginField || !password) {
+    return res.status(400).json({ error: "Email/Username and password are required" });
   }
 
-  const user = await db.collection("userData").findOne({ username });
+  // Search by email or username
+  const user = await db.collection("userData").findOne({
+    $or: [{ username: loginField }, { email: loginField }]
+  });
 
   if (!user) {
     return res.status(404).json({ error: "User doesn't exist" });
+  }
+
+  // Verify role matches (if role specified)
+  if (role && user.role && user.role !== role) {
+    return res.status(403).json({ error: `This account is registered as ${user.role}` });
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
@@ -57,6 +66,11 @@ router.post("/login", async (req, res) => {
   }
 
   const sessionID = uuidv4();
+  const token = jwt.sign(
+    { userId: user._id.toString(), role: user.role || 'patient' },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
 
   //convert it into IST 
   const nowUTC = new Date();
@@ -76,8 +90,12 @@ router.post("/login", async (req, res) => {
 
   res.status(200).json({
     message: "Login successful",
+    token,
     userId: user._id.toString(),
-    username: user.username,
+    username: user.username || user.name,
+    name: user.name || user.username,
+    email: user.email,
+    role: user.role || 'patient',
     sessionID,
   });
 });
@@ -129,17 +147,23 @@ router.post("/logout", async (req, res) => {
 
 router.post("/register", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, name, email, password, role, specialization, licenseNumber } = req.body;
 
     // Basic validation
-    if (!username || !email || !password) {
-      return res.status(400).json({ error: "All fields are required." });
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required." });
     }
 
-    // Check if username already exists
-    const existingUser = await db.collection("userData").findOne({ username });
-    if (existingUser) {
-      return res.status(409).json({ error: "Username already exists." });
+    if (role === 'doctor' && (!specialization || !licenseNumber)) {
+      return res.status(400).json({ error: "Specialization and license number required for doctors." });
+    }
+
+    // Check if username already exists (if provided)
+    if (username) {
+      const existingUser = await db.collection("userData").findOne({ username });
+      if (existingUser) {
+        return res.status(409).json({ error: "Username already exists." });
+      }
     }
 
     // Check if email already exists
@@ -151,14 +175,27 @@ router.post("/register", async (req, res) => {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Insert the user into the database
-    const result = await db.collection("userData").insertOne({
-      username,
+    // Prepare user document
+    const userDoc = {
+      username: username || email.split('@')[0],
+      name: name || username || email.split('@')[0],
       email,
       password: hashedPassword,
+      role: role || 'patient',
       categories: ["General", "Dental", "Ortho", "X-Ray"],
       fileCount: 0,
-    });
+      createdAt: new Date(),
+    };
+
+    // Add doctor-specific fields
+    if (role === 'doctor') {
+      userDoc.specialization = specialization;
+      userDoc.licenseNumber = licenseNumber;
+      userDoc.verified = false; // Doctors need verification
+    }
+
+    // Insert the user into the database
+    const result = await db.collection("userData").insertOne(userDoc);
 
     const userId = result.insertedId.toString();
 

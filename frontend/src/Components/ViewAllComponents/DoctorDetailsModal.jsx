@@ -11,6 +11,7 @@ import {
 } from "../Styles/ViewAllStyles";
 import styled from "styled-components";
 import { showErrorToast } from "../toastConfig"; // Import toast function
+import config from "../../config/api";
 
 // Styled dropdown (ModalSelect)
 const ModalSelect = styled.select`
@@ -44,7 +45,7 @@ const DoctorDetailsModal = ({ visible, onClose, onSubmit }) => {
     const fetchEmails = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:3001/fetch-emails/${userId}`
+          `${config.API_BASE_URL}/fetch-emails/${userId}`
         );
 
         // Filter to only include verified emails
@@ -71,7 +72,7 @@ const DoctorDetailsModal = ({ visible, onClose, onSubmit }) => {
     try {
       // Check if an active session exists with the same doctor email
       // const response = await axios.get(
-      //   `http://localhost:3001/check-active-session/${userId}/${doctorEmail}`
+      //   `${config.API_BASE_URL}/check-active-session/${userId}/${doctorEmail}`
       // );
   
       // if (response.data.error) {

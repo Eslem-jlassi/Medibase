@@ -5,6 +5,7 @@ import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import { showSuccessToast, showErrorToast } from "../toastConfig";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import config from '../../config/api.js';
 
 const Container = styled.div`
   max-width: 400px;
@@ -115,7 +116,7 @@ function ResetPasswordPage() {
     const verifyToken = async () => {
       try {
         const res = await axios.get(
-          `http://localhost:3001/verify-email-password-reset?token=${token}`
+          `${config.API_BASE_URL}/verify-email-password-reset?token=${token}`
         );
         setEmail(res.data.email);
         setLoading(false);
@@ -143,7 +144,7 @@ function ResetPasswordPage() {
     }
 
     try {
-      await axios.post("http://localhost:3001/reset-password-backend", {
+      await axios.post(`${config.API_BASE_URL}/reset-password-backend`, {
         email,
         newPassword: password,
       });

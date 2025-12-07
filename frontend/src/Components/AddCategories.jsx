@@ -4,6 +4,8 @@ import axios from "axios";
 import { BiCategory } from "react-icons/bi";
 import { FaEllipsisV } from "react-icons/fa";
 import Loading from "./HomeComponents/ExtraComponents/Loading";
+import Navbar from "./HomeComponents/navbar";
+import config from "../config/api";
 import {
   StyledCategories,
   AddCategoryButton,
@@ -35,7 +37,7 @@ const AddCategories = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/getCategoriesFileCount/${userId}`);
+        const response = await axios.get(`${config.API_BASE_URL}/getCategoriesFileCount/${userId}`);
         setCategories(response.data.categories || []);
       } catch (error) {
         console.error("Error fetching categories:", error);
@@ -54,7 +56,7 @@ const AddCategories = () => {
   //   }
 
   //   try {
-  //     const response = await axios.post(`http://localhost:3001/addNewCategory2/${userId}`, {
+  //     const response = await axios.post(`${config.API_BASE_URL}/addNewCategory2/${userId}`, {
   //       newCategory,
   //     });
   //     setCategories([
@@ -74,7 +76,7 @@ const AddCategories = () => {
     }
   
     try {
-      const response = await axios.post(`http://localhost:3001/addNewCategory2/${userId}`, {
+      const response = await axios.post(`${config.API_BASE_URL}/addNewCategory2/${userId}`, {
         newCategory,
       });
   
@@ -104,7 +106,7 @@ const AddCategories = () => {
   
   const handleRenameCategory = async (oldCategory, newCategoryName) => {
     try {
-      const response = await axios.post(`http://localhost:3001/renameCategory/${userId}`, {
+      const response = await axios.post(`${config.API_BASE_URL}/renameCategory/${userId}`, {
         oldCategory,
         newCategory: newCategoryName,
       });
@@ -143,11 +145,11 @@ const AddCategories = () => {
 
   const handleDeleteCategory = async (categoryToDelete) => {
     try {
-      await axios.post(`http://localhost:3001/deleteCategory/${userId}`, {
+      await axios.post(`${config.API_BASE_URL}/deleteCategory/${userId}`, {
         categoryToDelete,
       });
 
-      const response = await axios.get(`http://localhost:3001/getCategoriesFileCount/${userId}`);
+      const response = await axios.get(`${config.API_BASE_URL}/getCategoriesFileCount/${userId}`);
       setCategories(response.data.categories || []);
 
       showSuccessToast("Category deleted successfully!");
@@ -208,7 +210,8 @@ const AddCategories = () => {
 
   return (
     <>
-    <HomeButton/>
+    <Navbar />
+    <HomeButton />
     <StyledCategories>
       <ToastContainer />
       <h1>Categories</h1>
@@ -288,3 +291,4 @@ const AddCategories = () => {
 };
 
 export default AddCategories;
+

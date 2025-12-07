@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: medibase-backend
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free
+    region: oregon
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        value: mongodb+srv://medibase-admin:Eslem1234*@cluster0.yvzcae8.mongodb.net/medibase?retryWrites=true&w=majority&appName=Cluster0
+      - key: JWT_SECRET
+        value: 907453d4e5399660d870222caf7b583e0fca42167a1a5753223a332b0a5a458ce4c6460afbb777c8d34dd1f9b49f78eb4e016ae7e155535a37d87140e7472b89
+      - key: EMAIL_USER
+        value: eslemjlassi23@gmail.com
+      - key: EMAIL_PASS
+        value: uppnwcckqzifygyi
+      - key: MASTER_ENCRYPTION_KEY
+        value: a60738e541ed87ce54cafb04840b02cc3937cd36b368319a0fbc86ff5428d6d4
+      - key: APP_BASE_URL
+        value: https://medibase-eslem.web.app

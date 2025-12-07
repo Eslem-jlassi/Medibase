@@ -3,6 +3,7 @@ import axios from "axios";
 import fileDownload from "js-file-download";
 import styled from "styled-components";
 import { FaDownload } from "react-icons/fa";
+import config from "../../config/api";
 
 // Styled-components for the button
 const DownloadBtn = styled.button`
@@ -27,7 +28,7 @@ const DownloadButton = ({ userId, fileName, downloadName }) => {
   const handleDownload = async () => {
     try {
       // Call the API to get the file
-      const response = await axios.get(`http://localhost:3001/file/${userId}/${fileName}`, {
+      const response = await axios.get(`${config.API_BASE_URL}/file/${userId}/${fileName}`, {
         responseType: "blob", // Important for handling binary data
       });
 

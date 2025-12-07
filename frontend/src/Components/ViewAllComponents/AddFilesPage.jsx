@@ -14,6 +14,7 @@ import { showErrorToast, showSuccessToast, showWarningToast } from "../toastConf
 import FileCheckbox from "./FileCheckbox";
 import NoFilesFound from "../HomeComponents/ExtraComponents/NoFiles";
 import { Button, ButtonContainer } from "../Styles/SessionFilesStyles";
+import config from "../../config/api";
 
 const DisplayFiles = ({ selectionMode = true }) => {
   const [categories, setCategories] = useState([]);
@@ -47,11 +48,11 @@ const DisplayFiles = ({ selectionMode = true }) => {
         }
         const encodedDoctorName = encodeURIComponent(doctorName);
         const sessionFilesResponse = await axios.get(
-          `http://localhost:3001/getSessionFiles/${userId}/${encodedDoctorName}`
+          `${config.API_BASE_URL}/getSessionFiles/${userId}/${encodedDoctorName}`
         );
         const sessionFiles = sessionFilesResponse.data.map((file) => file.filename);
 
-        const categoriesResponse = await axios.get(`http://localhost:3001/categories/${userId}`);
+        const categoriesResponse = await axios.get(`${config.API_BASE_URL}/categories/${userId}`);
         const allCategories = categoriesResponse.data;
 
         const filteredCategories = allCategories
@@ -125,7 +126,7 @@ const DisplayFiles = ({ selectionMode = true }) => {
         return;
       }
 
-      await axios.post(`http://localhost:3001/addFilesToSession/${userId}/${doctorName}`, {
+      await axios.post(`${config.API_BASE_URL}/addFilesToSession/${userId}/${doctorName}`, {
         selectedFiles,
       });
       showSuccessToast("Files added successfully!");

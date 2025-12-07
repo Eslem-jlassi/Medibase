@@ -1,0 +1,49 @@
+type User @table {
+  email: String!
+  displayName: String!
+  userType: String!
+  phoneNumber: String
+  address: String
+  medicalLicenseNumber: String
+}
+
+type MedicalFile @table {
+  fileName: String!
+  fileUrl: String!
+  fileType: String!
+  uploadDate: Timestamp!
+  description: String
+  tags: [String]
+  uploader: User
+}
+
+type AccessPermission @table {
+  granterUser: User!
+  recipientUser: User!
+  medicalFile: MedicalFile!
+  permissionGrantedAt: Timestamp!
+  status: String!
+  expiresAt: Timestamp
+}
+
+type Consultation @table {
+  patient: User!
+  doctor: User!
+  consultationDate: Timestamp!
+  purpose: String!
+  notes: String
+}
+
+type ConsultationFileAttachment @table(key: ["consultation", "medicalFile"]) {
+  consultation: Consultation!
+  medicalFile: MedicalFile!
+}
+
+type Message @table {
+  sender: User!
+  receiver: User!
+  sentAt: Timestamp!
+  messageContent: String!
+  readAt: Timestamp
+  attachedFile: MedicalFile
+}

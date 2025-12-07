@@ -4,35 +4,22 @@ const { MongoClient } = require("mongodb");
 const keyManagement = require("../services/keyManagement");
 const { v4: uuidv4 } = require("uuid");
 const CryptoJS = require("crypto-js");
-const axios = require("axios");
+const { sendFilesEmail } = require("../services/emailService");
 const router = express.Router();
 
-let db;
-
-// Initialize MongoDB connection
-async function initializeMongoDB() {
-  try {
-    const client = await MongoClient.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    db = client.db("medibase");
-    console.log("MongoDB connected successfully in viewFilesRoutes");
-  } catch (error) {
-    console.error("MongoDB connection error:", error);
-    throw error;
-  }
+// Helper to get db from app.locals populated in index.js
+function getDb(req) {
+  return req.app.locals.db;
 }
-
-initializeMongoDB()
 
 /**
  * Endpoint to fetch files grouped by category for a specific user
  */
 router.get("/categories/:userId", async (req, res) => {
   try {
+    const db = getDb(req);
     if (!db) {
-      return res.status(500).json({ error: "Database connection not initialized" });
+      return res.status(503).json({ error: "Database not initialized" });
     }
 
     const userId = req.params.userId;
@@ -119,6 +106,11 @@ router.post("/sendFiles/:userId", async (req, res) => {
       return res.status(400).json({ error: "Invalid request. Missing userId, files, or doctor details." });
     }
 
+    const db = getDb(req);
+    if (!db) {
+      return res.status(503).json({ error: "Database not initialized" });
+    }
+
     // Fetch the user's encrypted root key from the userData collection
     const user = await db.collection("userData").findOne({ _id: new ObjectId(userId) });
 
@@ -148,10 +140,8 @@ router.post("/sendFiles/:userId", async (req, res) => {
       createdAt: new Date(),
     });
 
-    await axios.post(`http://localhost:3001/send-files-mail`, {
-      doctorEmail,
-      sessionId,
-    });
+    // Send email directly instead of calling localhost
+    await sendFilesEmail(doctorEmail, sessionId);
 
     // Send success response
     res.status(200).json({
@@ -177,6 +167,10 @@ router.post("/renameFile/:userId", async (req, res) => {
     const userId = req.params.userId;
     const { fileId, newName } = req.body;
 
+    const db = getDb(req);
+    if (!db) {
+      return res.status(503).json({ error: "Database not initialized" });
+    }
 
     // Check if a file with the new name already exists for this user
     const existingFile = await db.collection("encryptedFiles.files").findOne({
@@ -215,6 +209,11 @@ router.post("/changeFileCategory/:userId", async (req, res) => {
   try {
     const { userId } = req.params; // Extract userId
     const { fileId, newCategory } = req.body; // Extract fileId and newCategory from the body
+
+    const db = getDb(req);
+    if (!db) {
+      return res.status(503).json({ error: "Database not initialized" });
+    }
 
     // Validate inputs
     if (!userId) {
@@ -305,6 +304,11 @@ router.post("/renameCategory/:userId", async (req, res) => {
     const { userId } = req.params;
     const { oldCategory, newCategory } = req.body;
 
+    const db = getDb(req);
+    if (!db) {
+      return res.status(503).json({ error: "Database not initialized" });
+    }
+
     if (!userId || !oldCategory || !newCategory) {
       return res.status(400).json({ error: "Missing parameters" });
     }
@@ -394,6 +398,11 @@ router.post("/deleteCategory/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const { categoryToDelete } = req.body;
+
+    const db = getDb(req);
+    if (!db) {
+      return res.status(503).json({ error: "Database not initialized" });
+    }
 
     if (!userId || !categoryToDelete) {
       return res.status(400).json({ error: "Missing parameters" });
@@ -489,6 +498,11 @@ router.get("/getCategoriesFileCount/:userId", async (req, res) => {
     // Get userId from request params
     const { userId } = req.params;
 
+    const db = getDb(req);
+    if (!db) {
+      return res.status(503).json({ error: "Database not initialized" });
+    }
+
     // Validate userId
     if (!userId) {
       return res.status(400).json({ error: "Missing parameter: userId" });
@@ -558,6 +572,11 @@ router.get('/getFiles/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
+    const db = getDb(req);
+    if (!db) {
+      return res.status(503).json({ error: "Database not initialized" });
+    }
+
     if (!userId) {
       return res.status(400).json({ error: "Missing parameter: userId" });
     }
@@ -587,6 +606,11 @@ router.get('/getFiles/:userId', async (req, res) => {
 router.post("/clickToView", async (req, res) => {
   try {
     const { filename } = req.body; // Extract the filename from the request body
+
+    const db = getDb(req);
+    if (!db) {
+      return res.status(503).json({ error: "Database not initialized" });
+    }
 
     if (!filename) {
       return res.status(400).json({ error: "Filename is required" });
@@ -621,6 +645,11 @@ router.post("/clickToView", async (req, res) => {
 router.get("/getFileId/:userId/:fileName", async (req, res) => {
   try {
     const { userId, fileName } = req.params;
+
+    const db = getDb(req);
+    if (!db) {
+      return res.status(503).json({ error: "Database not initialized" });
+    }
 
     if (!userId || !fileName) {
       return res.status(400).json({ error: "Missing userId or fileName" });

@@ -58,7 +58,7 @@
 //   const handleFetchFile = async () => {
 //     try {
 //       const response = await axios.get(
-//         `http://localhost:3001/file/${userId}/${fileName}`,
+//         `${config.API_BASE_URL}/file/${userId}/${fileName}`,
 //         {
 //           responseType: "arraybuffer",
 //         }
@@ -141,6 +141,7 @@ import { ClickToViewButton, CloseButton } from "../Styles/HomeStyles";
 import "../Styles/styles.css";
 import DownloadButton from "./downloadButton";
 import { CgCloseR } from "react-icons/cg";
+import config from "../../config/api";
 
 // Styled Components
 const ModalOverlay = styled.div`
@@ -194,7 +195,7 @@ function ExpandButton({ userId, fileName }) {
     setLoading(true); // Show loading indicator
     try {
       const response = await axios.get(
-        `http://localhost:3001/file/${userId}/${fileName}`,
+        `${config.API_BASE_URL}/file/${userId}/${fileName}`,
         {
           responseType: "arraybuffer",
         }
@@ -268,4 +269,3 @@ function ExpandButton({ userId, fileName }) {
 }
 
 export default ExpandButton;
-

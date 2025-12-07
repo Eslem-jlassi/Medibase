@@ -3,6 +3,7 @@ import { FaSearch, FaTimes } from "react-icons/fa";
 import { SearchBox, Row, Input, Button, ResultBox, NoResultsMessage } from "../Styles/ViewAllStyles";
 import axios from "axios";
 import HomeButton from "../HomeBtn";
+import config from "../../config/api";
 
 const SearchBar = ({ onSearch }) => {
   const userId = localStorage.getItem("userId");
@@ -16,7 +17,7 @@ const SearchBar = ({ onSearch }) => {
   useEffect(() => {
     const fetchFileNames = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/getFiles/${userId}`);
+        const response = await axios.get(`${config.API_BASE_URL}/getFiles/${userId}`);
         setAllFiles(response.data.files);
       } catch (error) {
         console.error("Error fetching filenames:", error);

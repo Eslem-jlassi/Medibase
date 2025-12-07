@@ -12,6 +12,7 @@ import { showErrorToast, showSuccessToast } from "../toastConfig";
 import Modal from "./Modal";
 import FileCheckbox from "./FileCheckbox";
 import NoFilesFound from "../HomeComponents/ExtraComponents/NoFiles"; 
+import config from "../../config/api";
 
 const DisplayFiles = ({
   searchQuery,
@@ -42,7 +43,7 @@ const DisplayFiles = ({
           console.error("User ID is missing.");
           return;
         }
-        const response = await axios.get(`http://localhost:3001/categories/${userId}`);
+        const response = await axios.get(`${config.API_BASE_URL}/categories/${userId}`);
         setCategories(response.data);
         setFilteredCategories(response.data);
         const initialExpandedState = response.data.reduce((acc, category) => {
@@ -111,7 +112,7 @@ const DisplayFiles = ({
     );
   
     try {
-      const response = await axios.get(`http://localhost:3001/getFileId/${userId}/${fileName}`);
+      const response = await axios.get(`${config.API_BASE_URL}/getFileId/${userId}/${fileName}`);
   
       if (response.status === 200) {
         const fileId = response.data.fileId;
@@ -133,7 +134,7 @@ const DisplayFiles = ({
   const handleFileView = async (fileName) => {
     if (selectionMode) return;
     try {
-      await axios.post("http://localhost:3001/clickToView", { filename: fileName });
+      await axios.post(`${config.API_BASE_URL}/clickToView`, { filename: fileName });
       console.log(`File clicked for viewing: ${fileName}`);
     } catch (error) {
       console.error("Error sending file view request:", error);
@@ -142,7 +143,7 @@ const DisplayFiles = ({
 
   const handleDownload = async (fileName) => {
     try {
-      const response = await axios.get(`http://localhost:3001/file/${userId}/${fileName}`, {
+      const response = await axios.get(`${config.API_BASE_URL}/file/${userId}/${fileName}`, {
         responseType: "blob",
       });
       const contentType = response.headers["content-type"];
@@ -189,7 +190,7 @@ const DisplayFiles = ({
     try {
       if (modalState.type === "rename") {
         // Rename the file
-        await axios.post(`http://localhost:3001/renameFile/${userId}`, {
+        await axios.post(`${config.API_BASE_URL}/renameFile/${userId}`, {
           fileId: modalState.fileId,
           newName: modalState.inputValue,
         });
@@ -209,7 +210,7 @@ const DisplayFiles = ({
         showSuccessToast("File renamed successfully.");
       } else if (modalState.type === "changeCategory") {
         // Change the file category
-        await axios.post(`http://localhost:3001/changeFileCategory/${userId}`, {
+        await axios.post(`${config.API_BASE_URL}/changeFileCategory/${userId}`, {
           fileId: modalState.fileId,
           newCategory: modalState.inputValue,
         });
@@ -247,7 +248,7 @@ const DisplayFiles = ({
         showSuccessToast("Category changed successfully.");
       } else if (modalState.type === "delete") {
         // Delete the file
-        await axios.delete(`http://localhost:3001/deleteFile/${userId}`, {
+        await axios.delete(`${config.API_BASE_URL}/deleteFile/${userId}`, {
           data: { fileId: modalState.fileId },
         });
   

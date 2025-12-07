@@ -4,6 +4,7 @@ import styled from "styled-components";
 import { toast } from "react-toastify"; // ✅ Import Toastify
 import "react-toastify/dist/ReactToastify.css"; // Ensure styles are imported
 import FileCheckbox from "./FileCheckbox"; // Import your custom checkbox component
+import config from "../../config/api";
 
 const ModalOverlay = styled.div`
   position: fixed;
@@ -73,12 +74,12 @@ const AddFilesModal = ({ userId, doctorName, closeModal, refreshFiles }) => {
     const fetchAvailableFiles = async () => {
       try {
         // Get all user files
-        const userFilesResponse = await axios.get(`http://localhost:3001/getFiles/${userId}`);
+        const userFilesResponse = await axios.get(`${config.API_BASE_URL}/getFiles/${userId}`);
         const userFiles = userFilesResponse.data.files;
 
         // Get session files
         const encodedDoctorName = encodeURIComponent(doctorName);
-        const sessionFilesResponse = await axios.get(`http://localhost:3001/getSessionFiles/${userId}/${encodedDoctorName}`);
+        const sessionFilesResponse = await axios.get(`${config.API_BASE_URL}/getSessionFiles/${userId}/${encodedDoctorName}`);
         const sessionFiles = sessionFilesResponse.data.map(file => file.filename);
 
         // Filter out files already in the session
@@ -107,7 +108,7 @@ const AddFilesModal = ({ userId, doctorName, closeModal, refreshFiles }) => {
         return;
       }
 
-      await axios.post(`http://localhost:3001/addFilesToSession/${userId}/${doctorName}`, {
+      await axios.post(`${config.API_BASE_URL}/addFilesToSession/${userId}/${doctorName}`, {
         selectedFiles, // Fix: Ensure backend gets the expected key
       });
       refreshFiles(); // ✅ Refresh the session list immediately

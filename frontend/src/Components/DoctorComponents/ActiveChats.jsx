@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import Loading from "../HomeComponents/ExtraComponents/Loading";
 import NoFilesFound from "../HomeComponents/ExtraComponents/NoFiles";
+import Navbar from "../HomeComponents/navbar";
 import { 
     Container, 
     ChatList, 
@@ -11,6 +12,7 @@ import {
     Title, 
   } from "../Styles/SessionFilesStyles";
 import HomeButton from "../HomeBtn";
+import config from "../../config/api";
 
 
 const ActiveChats = () => {
@@ -23,7 +25,7 @@ const ActiveChats = () => {
   useEffect(() => {
     const fetchActiveSessions = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/getActiveSessions/${userId}`);
+        const response = await axios.get(`${config.API_BASE_URL}/getActiveSessions/${userId}`);
         setSessions(response.data.sessions);
       } catch (error) {
         console.error(error);
@@ -52,6 +54,8 @@ const ActiveChats = () => {
   // if (files.length === 0) return <NoFilesFound />;
 
   return (
+    <>
+    <Navbar />
     <Container>
       <HomeButton />      
       {loading ? (
@@ -70,6 +74,7 @@ const ActiveChats = () => {
       )}
 
     </Container>
+    </>
   );
 };
 

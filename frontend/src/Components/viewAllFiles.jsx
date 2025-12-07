@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import SearchBar from "./ViewAllComponents/SearchBar";
 import DisplayFiles from "./ViewAllComponents/DisplayFiles";
+import Navbar from "./HomeComponents/navbar";
 import HomeButton from "./HomeBtn";
 import SelectSendButtons from "./ViewAllComponents/SelectSendButtons";
 import DoctorDetailsModal from "./ViewAllComponents/DoctorDetailsModal";
 import { showErrorToast, showSuccessToast } from "./toastConfig";
 import axios from "axios";
+import config from "../config/api";
 import {
   HeaderContainer,
   CenteredSearchBar,
@@ -48,7 +50,7 @@ const ViewAllFiles = () => {
   const handleModalSubmit = async (doctorName, doctorEmail) => {
     try {
         const response = await axios.post(
-            `http://localhost:3001/sendFiles/${userId}`,
+            `${config.API_BASE_URL}/sendFiles/${userId}`,
             {
                 selectedFiles: selectedIds,
                 doctorName,
@@ -75,6 +77,7 @@ const ViewAllFiles = () => {
 
   return (
     <PageContainer>
+      <Navbar />
       <HeaderContainer>
         <HomeButton isViewAllFilesPage={true}/>
         <CenteredSearchBar>

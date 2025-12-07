@@ -6,6 +6,7 @@ import { CgCloseR } from "react-icons/cg";
 import "../Styles/styles.css";
 import { ToastContainer } from "react-toastify";
 import { showSuccessToast, showErrorToast } from "../toastConfig";
+import config from "../../config/api";
 
 import {
   Container,
@@ -42,7 +43,7 @@ const AddNew = ({ userId, onFileUpload }) => {
   const fetchCategories = useCallback(async () => {
     try {
       const response = await axios.get(
-        `http://localhost:3001/getCategories2/${userId}`
+        `${config.API_BASE_URL}/getCategories2/${userId}`
       );
       setCategories(response.data.categories || []);
     } catch (error) {
@@ -85,7 +86,7 @@ const AddNew = ({ userId, onFileUpload }) => {
       return;
     }
     try {
-      await axios.post(`http://localhost:3001/addNewCategory2/${userId}`, {
+      await axios.post(`${config.API_BASE_URL}/addNewCategory2/${userId}`, {
         newCategory,
       });
       setNewCategoryModal(false);
@@ -110,7 +111,7 @@ const AddNew = ({ userId, onFileUpload }) => {
 
     setIsUploading(true);
     try {
-      await axios.post(`http://localhost:3001/upload/${userId}`, formData, {
+      await axios.post(`${config.API_BASE_URL}/upload/${userId}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       showSuccessToast("File uploaded successfully!");

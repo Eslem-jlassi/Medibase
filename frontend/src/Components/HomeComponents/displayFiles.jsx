@@ -10,6 +10,7 @@ import {
 import ExpandButton from "./expandButton";
 import Loading from "./ExtraComponents/Loading";
 import NoFilesFound from "./ExtraComponents/NoFiles";
+import config from "../../config/api";
 
 function HomeFilePreviews({ userId, refreshKey }) {
   const [files, setFiles] = useState([]);
@@ -26,7 +27,7 @@ function HomeFilePreviews({ userId, refreshKey }) {
         }
 
         const response = await axios.get(
-          `http://localhost:3001/files2/recent/${userId}`
+          `${config.API_BASE_URL}/files2/recent/${userId}`
         );
         setFiles(response.data);
         setError(null); // Clear previous errors, if any

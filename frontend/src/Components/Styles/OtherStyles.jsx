@@ -73,7 +73,7 @@ export const SupportLink = styled.a`
 export const ButtonWrapper = styled.div`
   position: fixed;
   left: 20px;
-  top: ${(props) => (props.isViewAllFilesPage ? "20px" : "90px")};
+  top: ${(props) => (props.$isViewAllFilesPage ? "20px" : "90px")};
   background: white;
   padding: 5px;
   width: 50px;

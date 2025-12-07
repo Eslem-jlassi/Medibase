@@ -1,0 +1,49 @@
+mutation CreateNewMedicalFile($description: String, $fileName: String!, $fileType: String!, $fileUrl: String!, $uploadDate: Timestamp!) @auth(level: USER) {
+  medicalFile_insert(data: {
+    description: $description,
+    fileName: $fileName,
+    fileType: $fileType,
+    fileUrl: $fileUrl,
+    uploadDate: $uploadDate,
+    uploaderId_expr: "auth.uid"
+  })
+}
+
+query GetMedicalFileById($id: UUID!) @auth(level: USER) {
+  medicalFile(id: $id) {
+    id
+    description
+    fileName
+    fileType
+    fileUrl
+    tags
+    uploadDate
+    uploader {
+      id
+      displayName
+    }
+  }
+}
+
+query ListMedicalFilesForUser @auth(level: USER) {
+  medicalFiles(where: {uploaderId: {eq_expr: "auth.uid"}}) {
+    id
+    description
+    fileName
+    fileType
+    fileUrl
+    tags
+    uploadDate
+  }
+}
+
+mutation GrantAccessToMedicalFile($medicalFileId: UUID!, $recipientUserId: UUID!, $expiresAt: Timestamp!, $status: String!) @auth(level: USER) {
+  accessPermission_insert(data: {
+    medicalFileId: $medicalFileId,
+    recipientUserId: $recipientUserId,
+    expiresAt: $expiresAt,
+    status: $status,
+    granterUserId_expr: "auth.uid",
+    permissionGrantedAt_expr: "request.time"
+  })
+}

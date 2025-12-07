@@ -1,0 +1,50 @@
+mutation CreateSeedData @transaction @auth(level: NO_ACCESS) {
+  user_insertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      displayName: "Dr. Alice Smith",
+      email: "alice.smith@example.com",
+      userType: "doctor"
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      displayName: "Bob Johnson",
+      email: "bob.johnson@example.com",
+      userType: "patient"
+    }
+  ])
+  medicalFile_insertMany(data: [
+    {
+      id: "650e8400-e29b-41d4-a716-446655440002",
+      uploaderId: "550e8400-e29b-41d4-a716-446655440000",
+      fileName: "patient_report.pdf",
+      fileType: "pdf",
+      fileUrl: "http://example.com/reports/patient_report.pdf",
+      uploadDate: "2024-01-29T10:00:00Z"
+    }
+  ])
+  consultation_insertMany(data: [
+    {
+      id: "750e8400-e29b-41d4-a716-446655440003",
+      doctorId: "550e8400-e29b-41d4-a716-446655440000",
+      patientId: "550e8400-e29b-41d4-a716-446655440001",
+      consultationDate: "2024-01-30T14:00:00Z",
+      purpose: "Checkup"
+    }
+  ])
+  consultationFileAttachment_insertMany(data: [
+    {
+      consultationId: "750e8400-e29b-41d4-a716-446655440003",
+      medicalFileId: "650e8400-e29b-41d4-a716-446655440002"
+    }
+  ])
+  message_insertMany(data: [
+    {
+      id: "850e8400-e29b-41d4-a716-446655440004",
+      senderId: "550e8400-e29b-41d4-a716-446655440000",
+      receiverId: "550e8400-e29b-41d4-a716-446655440001",
+      messageContent: "Please review the attached report.",
+      sentAt: "2024-01-30T14:05:00Z"
+    }
+  ])
+}

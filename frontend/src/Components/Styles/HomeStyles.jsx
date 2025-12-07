@@ -1,28 +1,88 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
+
+// Animation keyframes
+const slideDown = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+`;
+
+const navGlow = keyframes`
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+  }
+  50% {
+    box-shadow: 0 4px 30px rgba(102, 126, 234, 0.2);
+  }
+`;
+
 export const Container = styled.div`
   text-align: center;
   margin-top: 50px;
-  display:flex;
+  display: flex;
   align-items: center;
   justify-content: center;
 `;
 
 export const NewButton = styled.button`
-  display: flex; /* Enables flexbox */
-  align-items: center; /* Aligns items vertically */
-  justify-content: center; /* Ensures content is centered */
-  gap: 8px; /* Adds space between the icon and the text */
-  padding: 10px 20px;
-  background-color: #001C30;
-  color: #e8f0ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 15px 28px;
+  background: linear-gradient(135deg, #0077B6 0%, #118AB2 100%);
+  color: #ffffff;
   border: none;
-  border-radius: 5px;
-  font-size: 20px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 119, 182, 0.25);
+  backdrop-filter: blur(10px);
+  z-index: 1;
+  font-family: 'Inter', sans-serif;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+    transition: left 0.5s;
+  }
+  
   &:hover {
-    background-color: #176B87;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 28px rgba(0, 119, 182, 0.35);
+    background: linear-gradient(135deg, #023E8A 0%, #0077B6 100%);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(-1px);
   }
 `;
 
@@ -32,19 +92,26 @@ export const ModalOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
+  animation: ${fadeIn} 0.3s ease-out;
 `;
 
 export const ModalContent = styled.div`
   position: relative;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  background-color: #e8f0ff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  padding: 30px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(102, 126, 234, 0.15);
+  text-align: center;
+  color: #333;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: ${slideDown} 0.4s ease-out;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   text-align: center;
   color: #001C30
@@ -142,23 +209,40 @@ export const NavbarContainer = styled.div`
   top: 0;
   left: 0;
   width: 100%;
-  height: 50px;
-  background-color: #001C30;
+  height: 70px;
+  background: linear-gradient(135deg, #0077B6 0%, #118AB2 100%);
+  backdrop-filter: blur(15px);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
+  padding: 10px 40px;
   z-index: 1000;
   color: white;
+  border-bottom: 2px solid rgba(6, 214, 160, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 119, 182, 0.15);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: inherit;
+    backdrop-filter: blur(15px);
+    z-index: -1;
+  }
 `;
 
 export const NavItems = styled.div`
   display: flex;
-  gap: 20px;
-  padding-right: 100px;
-
-  & > div {
+  gap: 30px;
+  padding-right: 50px;
+  align-items: center;
+  
+  & > * {
     cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 `;
 
@@ -169,62 +253,150 @@ export const ContentWrapper = styled.div`
 `;
 
 export const BodyContainer = styled.div`
-  padding-top: 60px; /* Ensures content starts below the fixed navbar */
+  padding-top: 90px;
   position: relative;
-  background-color: #e8f0ff; /* Example: Light gray background */
-  min-height: 100vh; /* Ensures the container spans the full viewport height */
+  background: linear-gradient(135deg, #E8F4F8 0%, #F0F9FF 50%, #E6F9F5 100%);
+  min-height: 100vh;
+  
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 20% 50%, rgba(0, 119, 182, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(6, 214, 160, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(17, 138, 178, 0.05) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+  }
 `;
 
 // Styled component for the logo
 export const Logo = styled.div`
   font-size: 32px;
   cursor: pointer;
-  color: #e8f0ff;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 2px;
+  transition: all 0.3s ease;
+  text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+  
+  &:hover {
+    transform: scale(1.05);
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+  }
 `;
 
 export const StyledLink = styled(Link)`
-  text-decoration: none; /* Remove underline */
-  color: #e8f0ff; /* Default color */
-  font-size: 18px; /* Adjust font size */
-  padding: 10px 15px; /* Add spacing */
-  transition: background-color 0.3s ease; /* Smooth hover effect */
-
-  &.active {
-    font-weight: bold;
-    border-bottom: 2px solid #e8f0ff; /* Optional underline for emphasis */
+  text-decoration: none;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 10px 18px;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+    transition: left 0.5s;
   }
 
   &:hover {
-    border-bottom: 1px solid #e8f0ff; 
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.22);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+
+  &.active {
+    background: rgba(6, 214, 160, 0.25);
+    box-shadow: 0 4px 15px rgba(6, 214, 160, 0.2);
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      height: 3px;
+      background: #06D6A0;
+      border-radius: 2px;
+    }
   }
 `;
 
 export const GridContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* 3 columns */
-  gap: 22px; /* Space between grid items */
-  padding: 20px;
-  padding-right: 35px;
-  padding-top: 7px;
-  margin-top: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 25px;
+  padding: 30px;
+  margin-top: 20px;
+  position: relative;
+  z-index: 1;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    padding: 20px;
+    gap: 20px;
+  }
 `;
 
 export const FileBlock = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  position: relative; /* Position relative for absolute positioning of content */
-  border: 4px solid #001C30; /* Border around each block */
-  border-radius: 8px; /* Rounded corners */
-  height: 250px; /* Fixed height for each block */
+  position: relative;
+  border: 2px solid rgba(0, 119, 182, 0.1);
+  border-radius: 16px;
+  height: 300px;
   text-align: center;
-  // overflow: hidden; /* Clip any content that goes outside the block */
-  transition: transform 0.2s, box-shadow 0.2s;
-  background-color: #D9EAFD; /* Semi-transparent white background */
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(0, 119, 182, 0.12);
+  cursor: pointer;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 119, 182, 0.05) 0%, rgba(6, 214, 160, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
 
   &:hover {
-    transform: scale(1.05); /* Slight zoom effect on hover */
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0, 119, 182, 0.25);
+    border-color: rgba(6, 214, 160, 0.3);
+    
+    &::before {
+      opacity: 1;
+    }
   }
 
   img, iframe, textarea {
@@ -321,40 +493,106 @@ export const NoFilesContainer = styled.div`
 export const UserIconContainer = styled.div`
   display: flex;
   cursor: pointer;
-  z-index: 9999; 
+  z-index: 9999;
+  padding: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(5px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  }
 `;
 
 export const Dropdown2 = styled.div`
   position: absolute;
-  top: 50px;
-  right: 50px; /* Add space between dropdown and right edge */
-  background: white;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  min-width: 150px;
-  padding: 10px 0;
+  top: 55px;
+  right: 30px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  min-width: 180px;
+  padding: 12px 0;
   z-index: 9999;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: ${slideDown} 0.3s ease-out;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: -8px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-bottom: 8px solid rgba(255, 255, 255, 0.95);
+  }
 `;
 
 
 export const DropdownItem2 = styled.div`
-  padding: 10px 20px;
+  padding: 12px 24px;
   font-size: 14px;
   color: #333;
   cursor: pointer;
   white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  width: 100%;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+  }
+  
   &:hover {
-    background-color: #f5f5f5;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    color: #667eea;
+    transform: translateX(5px);
+    
+    &::before {
+      transform: scaleY(1);
+    }
   }
 
   &:first-child {
     font-weight: bold;
     cursor: default;
+    color: #667eea;
+    border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+    margin-bottom: 5px;
+    
     &:hover {
-      background-color: white;
+      background: transparent;
+      transform: none;
+      
+      &::before {
+        transform: scaleY(0);
+      }
+    }
+  }
+  
+  &:last-child {
+    color: #ff6b6b;
+    
+    &:hover {
+      background: rgba(255, 107, 107, 0.1);
+      color: #ff5252;
     }
   }
 `;
