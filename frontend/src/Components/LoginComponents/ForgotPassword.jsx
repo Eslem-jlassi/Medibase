@@ -216,20 +216,20 @@ const StyledSignInLink = styled.p`
 
 function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState(""); // Changé de userId à username
   const [error, setError] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !userId) {
-      return setError("Email and User ID are required.");
+    if (!email || !username) {
+      return setError("Email and Username are required.");
     }
 
     try {
       await axios.post(
-        `${config.API_BASE_URL}/send-verification-forgot-password/${userId}`,
+        `${config.API_BASE_URL}/send-verification-forgot-password/${username}`,
         { email }
       );
       showSuccessToast("Verification email sent!");
@@ -250,9 +250,9 @@ function ForgotPassword() {
         <InputWrapper>
           <Input
             type="text"
-            placeholder="User ID"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
           />
         </InputWrapper>
         <InputWrapper>
