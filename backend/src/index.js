@@ -10,12 +10,24 @@ const cors = require("cors");
 
 const app = express();
 
+// Configuration CORS pour Firebase Hosting et localhost
 app.use(cors({
-    origin: ["http://localhost:3000", "https://medibase-eslem.web.app", "https://medibase-eslem.firebaseapp.com"],
+    origin: [
+        "http://localhost:3000", 
+        "http://localhost:5173",
+        "https://medibase-eslem.web.app", 
+        "https://medibase-eslem.firebaseapp.com"
+    ],
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-session-owner"]
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-session-owner"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    maxAge: 86400 // 24 heures
 }));
+
+// Handle preflight requests
+app.options('*', cors());
+
 app.use(express.json());
 
 // Connect to MongoDB
