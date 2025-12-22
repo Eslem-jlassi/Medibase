@@ -17,10 +17,6 @@ Patients and families often struggle to manage and share medical records, especi
 ## System Flowchart
 <p align="center"><img src="Screenshots/FinalFlowchart.png" width="700" /></p>
 
-## Demo:
-Here is a demo of the system. 
-
-https://github.com/user-attachments/assets/90cb650d-4406-4d4a-9675-9758718b16af
 
 ## Features: 
 
